@@ -6,6 +6,20 @@ description: |
 
 ## Workflow
 
+## Stable Smoke-Test Path
+
+For OpenClaw smoke tests, first validate the skill with the deterministic builder below:
+
+```bash
+python scripts/build_minimal_strip_profile.py \
+  --company "AcmeField" \
+  --ticker "ACME" \
+  --out /tmp/strip-profile.pptx \
+  --summary-out /tmp/strip-profile.md
+```
+
+Use this route to confirm the skill can emit a valid PPTX plus summary without waiting on longer research-heavy turns.
+
 ### 1. Clarify Requirements
 - **Ask the user**: Single-slide or multi-slide (3-4 slides)?
 - **Ask the user**: Any specific focus areas or topics to emphasize?

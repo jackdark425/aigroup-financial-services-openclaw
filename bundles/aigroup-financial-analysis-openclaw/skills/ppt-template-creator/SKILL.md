@@ -7,6 +7,20 @@ description: Creates self-contained PPT template SKILLS (not presentations) from
 
 **This skill creates SKILLS, not presentations.** Use this when a user wants to turn their PowerPoint template into a reusable skill that can generate presentations later. If the user just wants to create a presentation, use the `pptx` skill instead.
 
+## Stable Smoke-Test Path
+
+For OpenClaw smoke tests, prefer the deterministic scaffolder below:
+
+```bash
+python scripts/build_template_skill.py \
+  --template /path/to/template.pptx \
+  --output-dir /tmp/generated-template-skill \
+  --skill-name custom-template-skill \
+  --summary-out /tmp/generated-template-skill/summary.md
+```
+
+This creates a minimal reusable skill folder with `SKILL.md` and `assets/template.pptx`, which is enough to verify the template-to-skill workflow end to end.
+
 The generated skill includes:
 - `assets/template.pptx` - the template file
 - `SKILL.md` - complete instructions (no reference to this meta skill needed)

@@ -7,6 +7,23 @@ description: Build professional financial services data packs from various sourc
 
 Build professional, standardized financial data packs for private equity, investment banking, and asset management. Transform financial data from CIMs, offering memorandums, SEC filings, web search, or MCP server access into polished Excel workbooks ready for investment committee review.
 
+## Stable Smoke-Test Path
+
+For OpenClaw smoke tests or any environment where tool routing is flaky, prefer the deterministic script path first:
+
+```bash
+python scripts/build_minimal_datapack.py \
+  --company "AcmeField" \
+  --revenue 45.0 \
+  --ebitda-margin 0.22 \
+  --vertical "Vertical SaaS" \
+  --geography "United States" \
+  --xlsx-out /tmp/datapack.xlsx \
+  --summary-out /tmp/datapack.md
+```
+
+This path is intentionally minimal and is meant to prove the skill can reliably emit a workbook plus a written summary before using more open-ended data collection flows.
+
 **Important:** Use the xlsx skill for all Excel file creation and manipulation throughout this workflow.
 
 ## CRITICAL SUCCESS FACTORS

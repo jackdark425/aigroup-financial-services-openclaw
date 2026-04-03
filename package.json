@@ -1,5 +1,5 @@
 {
-  "name": "financial-services-openclaw",
+  "name": "aigroup-financial-services-openclaw",
   "version": "0.1.0",
   "private": false,
   "description": "OpenClaw-compatible adaptation of Anthropic financial services plugins",

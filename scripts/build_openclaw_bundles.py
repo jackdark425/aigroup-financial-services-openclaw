@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKS = ROOT / "packs"
 BUNDLES = ROOT / "bundles"
 SUPPORTED_BUNDLES = ("financial-analysis", "investment-banking")
+BUNDLE_PREFIX = "aigroup"
 
 
 def load_json(path: Path) -> dict:
@@ -32,7 +33,7 @@ def copy_optional_file(src: Path, dest: Path) -> bool:
 
 def render_manifest(pack_name: str, metadata: dict, has_commands: bool, has_mcp: bool) -> dict:
     manifest: dict[str, object] = {
-        "name": f"{pack_name}-openclaw",
+        "name": f"{BUNDLE_PREFIX}-{pack_name}-openclaw",
         "description": metadata.get("description") or f"{pack_name} OpenClaw bundle",
         "version": metadata.get("version") or "0.1.0",
         "skills": "skills",
@@ -81,7 +82,7 @@ def render_upstream_note(pack_name: str, metadata: dict) -> str:
     return "\n".join(
         [
             f"Source plugin: anthropics/financial-services-plugins/{source_dir}",
-            f"Adapted bundle: {pack_name}-openclaw",
+            f"Adapted bundle: {BUNDLE_PREFIX}-{pack_name}-openclaw",
             "License: Apache-2.0",
             "",
             "This bundle is a derivative packaging for OpenClaw compatibility.",
@@ -94,7 +95,7 @@ def render_upstream_note(pack_name: str, metadata: dict) -> str:
 def build_bundle(pack_name: str) -> Path:
     pack_dir = PACKS / pack_name
     metadata = load_json(pack_dir / "metadata.json")
-    bundle_dir = BUNDLES / f"{pack_name}-openclaw"
+    bundle_dir = BUNDLES / f"{BUNDLE_PREFIX}-{pack_name}-openclaw"
 
     if bundle_dir.exists():
         shutil.rmtree(bundle_dir)
@@ -119,7 +120,12 @@ def build_bundle(pack_name: str) -> Path:
         encoding="utf-8",
     )
     (bundle_dir / "README.md").write_text(
-        render_readme(f"{pack_name}-openclaw", metadata, has_commands=has_commands, has_mcp=has_mcp)
+        render_readme(
+            f"{BUNDLE_PREFIX}-{pack_name}-openclaw",
+            metadata,
+            has_commands=has_commands,
+            has_mcp=has_mcp,
+        )
         + "\n",
         encoding="utf-8",
     )

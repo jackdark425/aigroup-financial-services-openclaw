@@ -1,5 +1,5 @@
-Source plugin: anthropics/financial-services-plugins/investment-banking
-Adapted bundle: investment-banking-openclaw
+Source plugin: anthropics/financial-services-plugins/financial-analysis
+Adapted bundle: aigroup-financial-analysis-openclaw
 License: Apache-2.0
 
 This bundle is a derivative packaging for OpenClaw compatibility.

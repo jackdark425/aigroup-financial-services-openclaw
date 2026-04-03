@@ -1,4 +1,4 @@
-# financial-services-openclaw
+# aigroup-financial-services-openclaw
 
 OpenClaw-compatible adaptation of Anthropic's `financial-services-plugins`.
 
@@ -27,7 +27,7 @@ OpenClaw does not consume that structure directly as a plugin. However, the `ski
 ## Repository Layout
 
 ```text
-financial-services-openclaw/
+aigroup-financial-services-openclaw/
 ├── upstream/
 │   └── financial-services-plugins/   # latest upstream clone
 ├── packs/
@@ -37,7 +37,7 @@ financial-services-openclaw/
 │       ├── connectors/               # copied MCP templates
 │       └── metadata.json
 ├── bundles/
-│   └── <plugin-name>-openclaw/
+│   └── aigroup-<plugin-name>-openclaw/
 │       ├── .claude-plugin/plugin.json
 │       ├── skills/
 │       ├── commands/
@@ -93,13 +93,13 @@ python3 scripts/build_openclaw_bundles.py
 
 Current generated bundles:
 
-- `bundles/financial-analysis-openclaw`
-- `bundles/investment-banking-openclaw`
+- `bundles/aigroup-financial-analysis-openclaw`
+- `bundles/aigroup-investment-banking-openclaw`
 
 These are the two primary plugin tracks for this repository and should be developed in parallel:
 
-- `financial-analysis-openclaw`: valuation, modeling, and analytical workflows
-- `investment-banking-openclaw`: deal materials, pitch workflows, and transaction execution workflows
+- `aigroup-financial-analysis-openclaw`: valuation, modeling, and analytical workflows
+- `aigroup-investment-banking-openclaw`: deal materials, pitch workflows, and transaction execution workflows
 
 ## Install Skills Into OpenClaw
 
@@ -124,8 +124,8 @@ This repository now supports two OpenClaw-compatible delivery modes:
 
 The current production targets are:
 
-- `financial-analysis-openclaw`
-- `investment-banking-openclaw`
+- `aigroup-financial-analysis-openclaw`
+- `aigroup-investment-banking-openclaw`
 
 ## License
 

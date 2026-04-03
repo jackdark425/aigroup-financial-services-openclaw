@@ -2,7 +2,7 @@
 
 This repository has two first-class OpenClaw compatibility targets and both should evolve in parallel.
 
-## 1. financial-analysis-openclaw
+## 1. aigroup-financial-analysis-openclaw
 
 Primary scope:
 
@@ -19,7 +19,7 @@ Product role:
 - valuation toolkit
 - financial modeling toolkit
 
-## 2. investment-banking-openclaw
+## 2. aigroup-investment-banking-openclaw
 
 Primary scope:
 

@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PACKS = ROOT / "packs"
 BUNDLES = ROOT / "bundles"
+BUNDLE_PREFIX = "aigroup"
 
 
 def install_plugin(workspace: Path, plugin_name: str, prefix: bool) -> list[str]:
@@ -66,7 +67,7 @@ def main() -> None:
         installed = install_plugin(workspace, plugin_name, prefix=not args.no_prefix)
         all_installed[plugin_name] = installed
         if args.with_bundle_connectors:
-            connector_ids = install_bundle_mcp(workspace, f"{plugin_name}-openclaw")
+            connector_ids = install_bundle_mcp(workspace, f"{BUNDLE_PREFIX}-{plugin_name}-openclaw")
             if connector_ids:
                 print(f"[{plugin_name}] copied MCP template with {len(connector_ids)} server(s)")
                 for connector_id in connector_ids:

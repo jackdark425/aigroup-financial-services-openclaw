@@ -22,6 +22,12 @@ These constraints apply throughout all DCF model building. Review before startin
 - **If generating a standalone .xlsx file (no live Excel session):** Use Python/openpyxl as described below, then run `recalc.py` before delivery.
 - The rest of this skill uses openpyxl examples — translate to Office JS API calls when in that environment, but all principles (formula strings, cell comments, section checkpoints, sensitivity table loops) apply identically.
 
+**Preferred standalone artifact path for OpenClaw smoke tests:**
+- When the user wants a standalone `.xlsx` artifact in one pass, prefer invoking `scripts/build_minimal_dcf.py` instead of hand-writing the whole workbook inline.
+- Gather the required inputs from MCP/web first, then call the script with explicit CLI arguments.
+- After the workbook is written, run `python scripts/recalc.py <output.xlsx> 30` and write a short markdown summary next to the workbook.
+- Only fall back to fully manual workbook construction if the script cannot satisfy the requested structure.
+
 **⚠️ Office JS merged cell pitfall:** When building section headers with merged cells, do NOT call `.merge()` then set `.values` on the merged range — Office JS still reports the range's original dimensions and will throw `InvalidArgument: The number of rows or columns in the input array doesn't match the size or dimensions of the range`. Instead, write the value to the top-left cell alone, then merge and format the full range:
 
 ```js

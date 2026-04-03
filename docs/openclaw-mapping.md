@@ -9,20 +9,21 @@ Turn Anthropic financial services plugins into assets OpenClaw can actually use.
 | Claude Source | OpenClaw Target | Notes |
 |---------------|-----------------|-------|
 | `skills/` | `~/.openclaw/workspace/skills/` | Primary compatibility path |
-| `commands/*.md` | operator docs / future wrappers | Not directly executable in OpenClaw today |
-| `.mcp.json` | MCP config templates | Requires manual or scripted merge into OpenClaw config |
-| `.claude-plugin/plugin.json` | metadata only | Useful for source grouping, not OpenClaw runtime |
+| `commands/*.md` | bundle capability plus operator docs | OpenClaw can inspect Claude bundle command roots, but command semantics still need adaptation |
+| `.mcp.json` | bundle MCP capability or config template | Can ship inside a Claude-style bundle or be copied into config templates |
+| `.claude-plugin/plugin.json` | bundle manifest | Not a native OpenClaw extension manifest, but usable through OpenClaw bundle compatibility |
 
 ## Installation Strategy
 
-This repository does not try to pretend Claude plugins are native OpenClaw plugins.
+This repository does not try to pretend Claude plugins are native TypeScript OpenClaw extensions.
 
 Instead, it:
 
 1. groups upstream content by plugin name
 2. copies reusable skills into generated packs
-3. preserves command docs and connector templates
-4. installs only the parts OpenClaw can consume safely
+3. builds Claude-style bundles that OpenClaw can inspect and load
+4. preserves command docs and connector templates
+5. installs only the parts OpenClaw can consume safely
 
 ## Collision Strategy
 
@@ -49,4 +50,3 @@ The `financial-analysis` upstream plugin contains the core connector set. In Ope
 - or fully developed OpenClaw extension wrappers
 
 This repository currently preserves them as templates first.
-

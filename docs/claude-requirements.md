@@ -42,6 +42,17 @@ These Claude-specific pieces are not native OpenClaw plugins:
 
 These require adaptation, not direct installation.
 
+## What OpenClaw Can Reuse Natively
+
+OpenClaw can inspect Claude-style bundle layouts for several bundle capabilities, so a derivative repository can expose:
+
+- `.claude-plugin/plugin.json`
+- `skills/`
+- `commands/`
+- `.mcp.json`
+
+as an OpenClaw-readable bundle, even though the original Anthropic install flow is not reused.
+
 ## What Maps Well To OpenClaw
 
 These pieces are usually reusable:
@@ -57,4 +68,3 @@ Apache 2.0 generally permits commercial modification and redistribution, but:
 - trademark rights are not granted
 - external MCP providers still have their own service terms
 - commercial offers should be positioned as an OpenClaw compatibility layer or derivative integration, not as an official Anthropic plugin
-

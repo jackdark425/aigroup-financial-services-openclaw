@@ -1,0 +1,8 @@
+{
+  "name": "financial-analysis-openclaw",
+  "description": "Core financial modeling and analysis tools: DCF, comps, LBO, 3-statement models, competitive analysis, and deck QC",
+  "version": "0.1.0",
+  "skills": "skills",
+  "commands": "commands",
+  "mcpServers": ".mcp.json"
+}

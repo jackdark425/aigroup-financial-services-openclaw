@@ -9,6 +9,7 @@ This repository is a compatibility layer, not a claim of official Anthropic or O
 - tracks the latest upstream `anthropics/financial-services-plugins`
 - preserves the original Claude plugin structure under `upstream/`
 - generates OpenClaw-oriented packs under `packs/`
+- builds OpenClaw-readable Claude bundle plugins under `bundles/`
 - provides install scripts for copying financial skills into an OpenClaw workspace
 - documents how Claude plugin concepts map into OpenClaw concepts
 
@@ -35,8 +36,16 @@ financial-services-openclaw/
 │       ├── commands/                 # copied Claude command docs
 │       ├── connectors/               # copied MCP templates
 │       └── metadata.json
+├── bundles/
+│   └── <plugin-name>-openclaw/
+│       ├── .claude-plugin/plugin.json
+│       ├── skills/
+│       ├── commands/
+│       ├── .mcp.json
+│       └── README.md
 ├── scripts/
 │   ├── sync_upstream.py
+│   ├── build_openclaw_bundles.py
 │   └── install_to_openclaw.py
 ├── docs/
 │   ├── claude-requirements.md
@@ -73,6 +82,19 @@ This repository currently treats Anthropic financial plugins as:
 python3 scripts/sync_upstream.py
 ```
 
+## Build OpenClaw-Compatible Bundles
+
+These bundles use Claude bundle manifests because OpenClaw can inspect and load Claude-style bundle plugins for `skills`, `commands`, and `.mcp.json`.
+
+```bash
+python3 scripts/build_openclaw_bundles.py
+```
+
+Current generated bundles:
+
+- `bundles/financial-analysis-openclaw`
+- `bundles/investment-banking-openclaw`
+
 ## Install Skills Into OpenClaw
 
 Example local install into a workspace:
@@ -81,12 +103,24 @@ Example local install into a workspace:
 python3 scripts/install_to_openclaw.py \
   --workspace ~/.openclaw/workspace \
   --plugin financial-analysis \
-  --plugin investment-banking
+  --plugin investment-banking \
+  --with-bundle-connectors
 ```
 
 By default, installed skills are prefixed to avoid collisions.
 
+## OpenClaw Bundle Strategy
+
+This repository now supports two OpenClaw-compatible delivery modes:
+
+- `packs/`: direct skill copying into an OpenClaw workspace
+- `bundles/`: Claude-format bundle plugins that OpenClaw can inspect and load
+
+The first production target is:
+
+- `financial-analysis-openclaw`
+- `investment-banking-openclaw`
+
 ## License
 
 This repository is distributed under Apache 2.0, consistent with the upstream source. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-

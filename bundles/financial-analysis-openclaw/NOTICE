@@ -1,0 +1,15 @@
+This repository contains modified and repackaged material derived from:
+
+- anthropics/financial-services-plugins
+
+Source repository:
+- https://github.com/anthropics/financial-services-plugins
+
+Original upstream is licensed under Apache License 2.0.
+
+This repository adapts the upstream file-based Claude plugin structure into
+OpenClaw-oriented skill packs and compatibility tooling.
+
+Anthropic names, marks, and branding remain the property of their respective
+owners. This repository is not an official Anthropic release.
+

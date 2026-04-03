@@ -1,0 +1,7 @@
+{
+  "name": "investment-banking-openclaw",
+  "description": "Investment banking productivity tools: client and market insights, deck creation, financial analysis, and transaction management",
+  "version": "0.2.0",
+  "skills": "skills",
+  "commands": "commands"
+}

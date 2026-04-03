@@ -67,6 +67,7 @@ Those source assumptions and adaptation notes are documented here:
 - [docs/claude-requirements.md](docs/claude-requirements.md)
 - [docs/openclaw-mapping.md](docs/openclaw-mapping.md)
 - [docs/plugin-roadmap.md](docs/plugin-roadmap.md)
+- [docs/test-report.md](docs/test-report.md)
 
 ## Current Strategy
 

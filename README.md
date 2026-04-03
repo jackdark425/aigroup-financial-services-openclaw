@@ -10,6 +10,12 @@ It now also exposes a standalone root-level Claude bundle so the repository itse
 openclaw plugins install jackdark425/aigroup-financial-services-openclaw
 ```
 
+It is also published on OpenClaw Hub:
+
+```bash
+openclaw plugins install aigroup-financial-services-openclaw
+```
+
 ## What This Repo Does
 
 - tracks the latest upstream `anthropics/financial-services-plugins`
@@ -106,6 +112,17 @@ The repository root now provides a standalone bundle with:
 - `.claude-plugin/plugin.json` manifest
 
 Use the root bundle when you want one install that covers the full financial-services workflow surface.
+
+## Install From OpenClaw Hub
+
+```bash
+openclaw plugins install aigroup-financial-services-openclaw
+openclaw plugins inspect aigroup-financial-services-openclaw
+```
+
+Published package:
+
+- `aigroup-financial-services-openclaw@0.1.2`
 
 ## Generate Packs
 

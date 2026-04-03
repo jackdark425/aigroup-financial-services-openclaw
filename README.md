@@ -2,6 +2,8 @@
 
 OpenClaw-compatible adaptation of Anthropic's `financial-services-plugins`.
 
+This plugin is now positioned as the financial workflow and deliverables layer. By default it ships skills and commands only, and expects data collection to come from AIGroup lead-intelligence plugins and MCP services.
+
 This repository is a compatibility layer, not a claim of official Anthropic or OpenClaw endorsement.
 
 It now also exposes a standalone root-level Claude bundle so the repository itself can be installed and published as a single OpenClaw plugin:
@@ -35,7 +37,7 @@ Anthropic's source repository is file-based and easy to customize, but it is str
 - `commands/`
 - `skills/`
 
-OpenClaw does not consume that structure directly as a plugin. However, the `skills/` directories are often directly reusable as OpenClaw workspace skills, and the connector definitions can be repurposed as MCP configuration templates.
+OpenClaw does not consume that structure directly as a plugin. However, the `skills/` directories are often directly reusable as OpenClaw workspace skills, and the connector definitions can be repurposed as optional MCP configuration templates.
 
 For distribution, this repository now does two things:
 
@@ -97,10 +99,21 @@ This repository currently treats Anthropic financial plugins as:
 
 - `skills/` -> OpenClaw workspace skills
 - `commands/` -> operator playbooks / future command adapters
-- `.mcp.json` -> MCP connector templates for OpenClaw-side configuration
+- `.mcp.json` -> empty by default, so the published plugin installs cleanly without unsupported remote MCP transports
+- `.mcp.optional-upstream.json` -> preserved reference template for the original 11 upstream HTTP connectors
 - `.claude-plugin/plugin.json` -> source metadata only
 
 For external installation and Hub publishing, the root repository now functions as a single bundle plugin that combines the financial-analysis and investment-banking tracks.
+
+## Recommended Pairing
+
+For real-world use, install this plugin together with `aigroup-lead-discovery-openclaw`.
+
+Recommended stack:
+
+- `aigroup-lead-discovery-openclaw` for company intelligence and external lead signals
+- `aigroup-fmp-mcp`, `aigroup-market-mcp`, and `aigroup-finnhub-mcp` as AIGroup data services
+- `aigroup-financial-services-openclaw` for financial modeling, analysis workflows, and deliverable generation
 
 ## Root Bundle
 
@@ -108,7 +121,8 @@ The repository root now provides a standalone bundle with:
 
 - merged `skills/`
 - merged `commands/`
-- `.mcp.json` connector template
+- empty `.mcp.json` so installs stay clean by default
+- optional `.mcp.optional-upstream.json` for operators who explicitly want the original upstream connector references
 - `.claude-plugin/plugin.json` manifest
 
 Use the root bundle when you want one install that covers the full financial-services workflow surface.
@@ -122,7 +136,11 @@ openclaw plugins inspect aigroup-financial-services-openclaw
 
 Published package:
 
-- `aigroup-financial-services-openclaw@0.1.2`
+- `aigroup-financial-services-openclaw@0.1.3`
+
+Recommended companion package:
+
+- `aigroup-lead-discovery-openclaw`
 
 ## Release Prep
 
@@ -165,6 +183,22 @@ These are the two primary plugin tracks for this repository and should be develo
 
 - `aigroup-financial-analysis-openclaw`: valuation, modeling, and analytical workflows
 - `aigroup-investment-banking-openclaw`: deal materials, pitch workflows, and transaction execution workflows
+
+## Data Inputs
+
+By default, this plugin no longer enables the 11 upstream external financial HTTP MCP connectors during installation.
+
+That choice is intentional:
+
+- it keeps Hub installation simple
+- it avoids unsupported transport warnings for most users
+- it makes `aigroup-lead-discovery-openclaw` the default AIGroup data-entry layer
+
+If an operator explicitly wants the original upstream connector references, copy or adapt:
+
+```bash
+.mcp.optional-upstream.json
+```
 
 ## Install Skills Into OpenClaw
 

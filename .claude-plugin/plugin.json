@@ -1,0 +1,8 @@
+{
+  "name": "aigroup-financial-services-openclaw",
+  "description": "AIGroup financial-services bundle for OpenClaw, combining financial-analysis and investment-banking workflows",
+  "version": "0.1.0",
+  "skills": "skills",
+  "commands": "commands",
+  "mcpServers": ".mcp.json"
+}

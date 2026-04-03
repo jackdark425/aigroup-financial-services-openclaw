@@ -4,10 +4,17 @@ OpenClaw-compatible adaptation of Anthropic's `financial-services-plugins`.
 
 This repository is a compatibility layer, not a claim of official Anthropic or OpenClaw endorsement.
 
+It now also exposes a standalone root-level Claude bundle so the repository itself can be installed and published as a single OpenClaw plugin:
+
+```bash
+openclaw plugins install jackdark425/aigroup-financial-services-openclaw
+```
+
 ## What This Repo Does
 
 - tracks the latest upstream `anthropics/financial-services-plugins`
 - preserves the original Claude plugin structure under `upstream/`
+- exposes a standalone root bundle under the repository root
 - generates OpenClaw-oriented packs under `packs/`
 - builds OpenClaw-readable Claude bundle plugins under `bundles/`
 - provides install scripts for copying financial skills into an OpenClaw workspace
@@ -24,10 +31,19 @@ Anthropic's source repository is file-based and easy to customize, but it is str
 
 OpenClaw does not consume that structure directly as a plugin. However, the `skills/` directories are often directly reusable as OpenClaw workspace skills, and the connector definitions can be repurposed as MCP configuration templates.
 
+For distribution, this repository now does two things:
+
+- the repository root acts as a single installable bundle plugin: `aigroup-financial-services-openclaw`
+- `bundles/` keeps the narrower sub-bundles for targeted installs and validation
+
 ## Repository Layout
 
 ```text
 aigroup-financial-services-openclaw/
+├── .claude-plugin/plugin.json         # root standalone bundle manifest
+├── .mcp.json                          # root connector template
+├── skills/                            # merged root skill set
+├── commands/                          # merged root command set
 ├── upstream/
 │   └── financial-services-plugins/   # latest upstream clone
 ├── packs/
@@ -78,6 +94,19 @@ This repository currently treats Anthropic financial plugins as:
 - `.mcp.json` -> MCP connector templates for OpenClaw-side configuration
 - `.claude-plugin/plugin.json` -> source metadata only
 
+For external installation and Hub publishing, the root repository now functions as a single bundle plugin that combines the financial-analysis and investment-banking tracks.
+
+## Root Bundle
+
+The repository root now provides a standalone bundle with:
+
+- merged `skills/`
+- merged `commands/`
+- `.mcp.json` connector template
+- `.claude-plugin/plugin.json` manifest
+
+Use the root bundle when you want one install that covers the full financial-services workflow surface.
+
 ## Generate Packs
 
 ```bash
@@ -96,6 +125,10 @@ Current generated bundles:
 
 - `bundles/aigroup-financial-analysis-openclaw`
 - `bundles/aigroup-investment-banking-openclaw`
+
+Root standalone bundle:
+
+- `aigroup-financial-services-openclaw` (repository root)
 
 These are the two primary plugin tracks for this repository and should be developed in parallel:
 
@@ -125,6 +158,7 @@ This repository now supports two OpenClaw-compatible delivery modes:
 
 The current production targets are:
 
+- `aigroup-financial-services-openclaw`
 - `aigroup-financial-analysis-openclaw`
 - `aigroup-investment-banking-openclaw`
 

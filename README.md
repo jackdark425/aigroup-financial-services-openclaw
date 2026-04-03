@@ -93,6 +93,7 @@ Those source assumptions and adaptation notes are documented here:
 - [docs/plugin-roadmap.md](docs/plugin-roadmap.md)
 - [docs/test-report.md](docs/test-report.md)
 - [docs/quickstart.md](docs/quickstart.md)
+- [docs/mac-mini-host-runbook.md](docs/mac-mini-host-runbook.md)
 
 ## Current Strategy
 

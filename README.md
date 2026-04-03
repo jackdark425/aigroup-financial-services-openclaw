@@ -66,6 +66,7 @@ Those source assumptions and adaptation notes are documented here:
 
 - [docs/claude-requirements.md](docs/claude-requirements.md)
 - [docs/openclaw-mapping.md](docs/openclaw-mapping.md)
+- [docs/plugin-roadmap.md](docs/plugin-roadmap.md)
 
 ## Current Strategy
 
@@ -95,6 +96,11 @@ Current generated bundles:
 - `bundles/financial-analysis-openclaw`
 - `bundles/investment-banking-openclaw`
 
+These are the two primary plugin tracks for this repository and should be developed in parallel:
+
+- `financial-analysis-openclaw`: valuation, modeling, and analytical workflows
+- `investment-banking-openclaw`: deal materials, pitch workflows, and transaction execution workflows
+
 ## Install Skills Into OpenClaw
 
 Example local install into a workspace:
@@ -116,7 +122,7 @@ This repository now supports two OpenClaw-compatible delivery modes:
 - `packs/`: direct skill copying into an OpenClaw workspace
 - `bundles/`: Claude-format bundle plugins that OpenClaw can inspect and load
 
-The first production target is:
+The current production targets are:
 
 - `financial-analysis-openclaw`
 - `investment-banking-openclaw`

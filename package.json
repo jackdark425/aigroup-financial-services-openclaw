@@ -1,6 +1,6 @@
 {
   "name": "aigroup-financial-services-openclaw",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": false,
   "description": "OpenClaw-compatible adaptation of Anthropic financial services plugins",
   "license": "Apache-2.0",
@@ -8,6 +8,8 @@
   "scripts": {
     "sync:upstream": "python3 scripts/sync_upstream.py",
     "build:bundles": "python3 scripts/build_openclaw_bundles.py",
-    "build": "python3 scripts/sync_upstream.py && python3 scripts/build_openclaw_bundles.py"
+    "build": "python3 scripts/sync_upstream.py && python3 scripts/build_openclaw_bundles.py",
+    "validate:bundle": "python3 scripts/validate_bundle.py .",
+    "prepare:release": "python3 scripts/prepare_release_bundle.py /tmp/aigroup-financial-services-openclaw-release"
   }
 }

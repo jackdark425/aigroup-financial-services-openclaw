@@ -124,6 +124,20 @@ Published package:
 
 - `aigroup-financial-services-openclaw@0.1.2`
 
+## Release Prep
+
+To prepare the minimal publishable artifact used for ClawHub releases:
+
+```bash
+python3 scripts/prepare_release_bundle.py /tmp/aigroup-financial-services-openclaw-release
+```
+
+To validate the repository bundle shape directly:
+
+```bash
+python3 scripts/validate_bundle.py .
+```
+
 ## Generate Packs
 
 ```bash

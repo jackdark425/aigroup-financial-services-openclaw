@@ -92,6 +92,7 @@ Those source assumptions and adaptation notes are documented here:
 - [docs/openclaw-mapping.md](docs/openclaw-mapping.md)
 - [docs/plugin-roadmap.md](docs/plugin-roadmap.md)
 - [docs/test-report.md](docs/test-report.md)
+- [docs/quickstart.md](docs/quickstart.md)
 
 ## Current Strategy
 
@@ -133,6 +134,10 @@ Use the root bundle when you want one install that covers the full financial-ser
 openclaw plugins install aigroup-financial-services-openclaw
 openclaw plugins inspect aigroup-financial-services-openclaw
 ```
+
+Quick install guide:
+
+- [docs/quickstart.md](docs/quickstart.md)
 
 Published package:
 

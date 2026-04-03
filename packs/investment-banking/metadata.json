@@ -1,0 +1,10 @@
+{
+  "name": "investment-banking",
+  "version": "0.2.0",
+  "description": "Investment banking productivity tools: client and market insights, deck creation, financial analysis, and transaction management",
+  "author": {
+    "name": "Anthropic"
+  },
+  "source_plugin_dir": "investment-banking",
+  "generated_by": "scripts/sync_upstream.py"
+}

@@ -1,0 +1,3 @@
+# LBO Model Builder - Python Dependencies
+
+openpyxl>=3.0.0

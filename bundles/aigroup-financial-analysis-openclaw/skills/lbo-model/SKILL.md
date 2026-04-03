@@ -36,6 +36,12 @@ Before starting any LBO model:
 
 The rest of this skill is written with openpyxl examples, but the same principles apply to Office JS — just translate the API calls.
 
+**Preferred standalone artifact path for OpenClaw smoke tests:**
+- When the user wants a standalone `.xlsx` artifact in one pass, prefer invoking `scripts/build_minimal_lbo.py` instead of hand-building a workbook inline.
+- Gather the required assumptions first, then call the script with explicit CLI arguments.
+- After the workbook is written, run `python scripts/validate_lbo.py <output.xlsx>` and write a short markdown summary next to the workbook.
+- Only fall back to fully manual workbook construction if the script cannot satisfy the requested structure.
+
 ### Core Principles
 * **Every calculation must be an Excel formula** - NEVER compute values in Python and hardcode results into cells. When using openpyxl, write `cell.value = "=B5*B6"` (formula string), NOT `cell.value = 1250` (computed result). The model must be dynamic and update when inputs change.
 * **Use the template structure** - Follow the organization in `examples/LBO_Model.xlsx` or the user's provided template. Do not invent your own layout.

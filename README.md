@@ -1,8 +1,10 @@
 # aigroup-financial-services-openclaw
 
-OpenClaw-compatible adaptation of Anthropic's `financial-services-plugins`.
+Financial modeling, analysis, and deliverables suite for OpenClaw.
 
-This plugin is now positioned as the financial workflow and deliverables layer. By default it ships skills and commands only, and expects data collection to come from AIGroup lead-intelligence plugins and MCP services.
+Install this as the financial workflow suite after `aigroup-lead-discovery-openclaw`. It is designed to be the second half of the AIGroup banker stack: lead-discovery gathers company intelligence, and this plugin turns that context into models, analysis, and deliverables.
+
+This plugin now ships skills and commands only by default, and expects data collection to come from AIGroup lead-intelligence plugins and MCP services.
 
 This repository is a compatibility layer, not a claim of official Anthropic or OpenClaw endorsement.
 
@@ -109,7 +111,7 @@ For external installation and Hub publishing, the root repository now functions 
 
 ## Recommended Pairing
 
-For real-world use, install this plugin together with `aigroup-lead-discovery-openclaw`.
+For real-world use, treat installation as a two-suite flow and install this plugin together with `aigroup-lead-discovery-openclaw`.
 
 Recommended stack:
 
@@ -132,7 +134,9 @@ Use the root bundle when you want one install that covers the full financial-ser
 ## Install From OpenClaw Hub
 
 ```bash
+openclaw plugins install aigroup-lead-discovery-openclaw
 openclaw plugins install aigroup-financial-services-openclaw
+openclaw plugins inspect aigroup-lead-discovery-openclaw
 openclaw plugins inspect aigroup-financial-services-openclaw
 ```
 

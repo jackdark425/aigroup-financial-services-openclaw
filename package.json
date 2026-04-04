@@ -1,8 +1,8 @@
 {
   "name": "aigroup-financial-services-openclaw",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
-  "description": "OpenClaw-compatible adaptation of Anthropic financial services plugins",
+  "description": "Financial modeling, analysis, and deliverables suite for OpenClaw",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {

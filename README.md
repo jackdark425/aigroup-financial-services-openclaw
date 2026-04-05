@@ -159,6 +159,7 @@ Then restart the gateway before testing.
 
 Quick install guide:
 
+- [docs/start-here.md](docs/start-here.md)
 - [docs/quickstart.md](docs/quickstart.md)
 - [docs/banker-stack.md](docs/banker-stack.md)
 - [docs/example-prompts.md](docs/example-prompts.md)

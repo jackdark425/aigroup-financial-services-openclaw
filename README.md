@@ -140,6 +140,23 @@ openclaw plugins inspect aigroup-lead-discovery-openclaw
 openclaw plugins inspect aigroup-financial-services-openclaw
 ```
 
+## Recommended Trust Pinning
+
+If you want to remove the default `plugins.allow is empty` warning and make trust explicit, pin the suite ids in your OpenClaw config:
+
+```json
+{
+  "plugins": {
+    "allow": [
+      "aigroup-lead-discovery-openclaw",
+      "aigroup-financial-services-openclaw"
+    ]
+  }
+}
+```
+
+Then restart the gateway before testing.
+
 Quick install guide:
 
 - [docs/quickstart.md](docs/quickstart.md)

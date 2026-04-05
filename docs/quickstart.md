@@ -29,6 +29,27 @@ Expected results:
 - the bundle format shows `claude`
 - financial skills such as `dcf-model`, `lbo-model`, `datapack-builder`, or `pitch-deck` appear in `openclaw skills list`
 
+## Recommended Trust Pinning
+
+To remove the `plugins.allow is empty` warning, pin the two suite plugins explicitly:
+
+```json
+{
+  "plugins": {
+    "allow": [
+      "aigroup-lead-discovery-openclaw",
+      "aigroup-financial-services-openclaw"
+    ]
+  }
+}
+```
+
+After updating config, restart the gateway and re-run:
+
+```bash
+openclaw plugins inspect aigroup-financial-services-openclaw
+```
+
 ## What This Plugin Does
 
 Use this plugin for:

@@ -104,3 +104,4 @@ That means:
 - [Test Report](./test-report.md)
 - [Example Prompts](./example-prompts.md)
 - [Troubleshooting](./troubleshooting.md)
+- [Which Suite To Use](./which-suite-to-use.md)

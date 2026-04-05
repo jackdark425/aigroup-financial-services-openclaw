@@ -24,6 +24,26 @@ python scripts/build_minimal_datapack.py \
 
 This path is intentionally minimal and is meant to prove the skill can reliably emit a workbook plus a written summary before using more open-ended data collection flows.
 
+Execution rules for OpenClaw:
+
+- Use the bundled deterministic script before attempting any free-form Python generation.
+- Call Python directly. Do not use `cd ... && python ...`.
+- Do not create temporary Python files for the first pass.
+- Preferred command shape:
+
+```bash
+python scripts/build_minimal_datapack.py \
+  --company "TargetCo" \
+  --revenue 45.0 \
+  --ebitda-margin 0.22 \
+  --vertical "Vertical SaaS" \
+  --geography "United States" \
+  --xlsx-out /tmp/datapack.xlsx \
+  --summary-out /tmp/datapack.md
+```
+
+- Only move to custom scripting after the deterministic script path has failed or the user explicitly asks for a bespoke workbook structure.
+
 **Important:** Use the xlsx skill for all Excel file creation and manipulation throughout this workflow.
 
 ## CRITICAL SUCCESS FACTORS

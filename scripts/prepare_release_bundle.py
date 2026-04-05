@@ -12,6 +12,7 @@ INCLUDE_PATHS = [
     ".mcp.json",
     "skills",
     "commands",
+    "scripts",
     "README.md",
     "LICENSE",
     "NOTICE",

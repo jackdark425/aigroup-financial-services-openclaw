@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 from openpyxl import Workbook
+from openpyxl.chart import BarChart, LineChart, Reference
 from openpyxl.styles import Alignment, Font, PatternFill
 
 
@@ -50,10 +51,40 @@ def write_formula(ws, row: int, col: int, formula: str, number_format: str | Non
 def infer_growth_case(vertical: str) -> str:
     vertical_l = vertical.lower()
     if "semiconductor" in vertical_l or "chip" in vertical_l:
-        return "Demand tied to domestic compute buildout, accelerator refresh cycles, and strategic AI infrastructure programs."
+        return "增长逻辑主要来自国产算力建设、AI 加速卡迭代以及智算中心等战略项目落地。"
     if "software" in vertical_l or "saas" in vertical_l:
-        return "Expansion driven by module upsell, price realization, and deeper enterprise penetration."
-    return "Growth supported by category tailwinds, customer expansion, and execution against core product roadmap."
+        return "增长逻辑主要来自模块化加购、价格提升以及企业客户渗透率提升。"
+    return "增长逻辑主要来自行业景气、客户扩张和核心产品路线执行。"
+
+
+def add_historical_chart(ws) -> None:
+    chart = LineChart()
+    chart.title = "营收与 EBITDA 趋势"
+    chart.y_axis.title = "人民币百万元"
+    chart.x_axis.title = "期间"
+    data = Reference(ws, min_col=2, max_col=4, min_row=4, max_row=5)
+    cats = Reference(ws, min_col=2, max_col=4, min_row=3, max_row=3)
+    chart.add_data(data, titles_from_data=False, from_rows=True)
+    chart.set_categories(cats)
+    chart.style = 2
+    chart.height = 7
+    chart.width = 13
+    ws.add_chart(chart, "F3")
+
+
+def add_ops_chart(ws) -> None:
+    chart = BarChart()
+    chart.title = "核心经营指标"
+    chart.y_axis.title = "指标值"
+    chart.x_axis.title = "指标"
+    data = Reference(ws, min_col=2, max_col=2, min_row=3, max_row=7)
+    cats = Reference(ws, min_col=1, max_col=1, min_row=3, max_row=7)
+    chart.add_data(data, titles_from_data=False)
+    chart.set_categories(cats)
+    chart.style = 10
+    chart.height = 7
+    chart.width = 11
+    ws.add_chart(chart, "D3")
 
 
 def build_workbook(
@@ -70,18 +101,18 @@ def build_workbook(
 ) -> Workbook:
     wb = Workbook()
     ws = wb.active
-    ws.title = "Executive Summary"
-    write_header(ws, 1, "Executive Summary")
+    ws.title = "执行摘要"
+    write_header(ws, 1, "执行摘要")
     rows = [
-        ("Company", company),
-        ("Vertical", vertical),
-        ("Geography", geography),
-        ("Revenue ($mm)", revenue),
-        ("EBITDA Margin", ebitda_margin),
-        ("EBITDA ($mm)", "=B6*B7"),
-        ("Business Description", business_description),
-        ("Growth Case", infer_growth_case(vertical)),
-        ("Sources / Validation Status", source_note),
+        ("公司名称", company),
+        ("行业赛道", vertical),
+        ("主要区域", geography),
+        ("收入（人民币百万元）", revenue),
+        ("EBITDA 利润率", ebitda_margin),
+        ("EBITDA（人民币百万元）", "=B6*B7"),
+        ("业务描述", business_description),
+        ("增长逻辑", infer_growth_case(vertical)),
+        ("来源与校验状态", source_note),
     ]
     for idx, (k, v) in enumerate(rows, start=3):
         write_label(ws, idx, 1, k, bold=True)
@@ -101,13 +132,13 @@ def build_workbook(
     ws["B10"].alignment = Alignment(wrap_text=True, vertical="top")
     ws["B11"].alignment = Alignment(wrap_text=True, vertical="top")
 
-    hist = wb.create_sheet("Historical Financials")
-    write_header(hist, 1, "Historical Financials")
+    hist = wb.create_sheet("历史财务")
+    write_header(hist, 1, "历史财务")
     years = ["2023A", "2024A", "2025A"]
     metrics = [
-        ("Revenue", [revenue * 0.78, revenue * 0.89, revenue]),
+        ("营业收入", [revenue * 0.78, revenue * 0.89, revenue]),
         ("EBITDA", [revenue * 0.78 * (ebitda_margin - 0.02), revenue * 0.89 * (ebitda_margin - 0.01), revenue * ebitda_margin]),
-        ("EBITDA Margin", [(ebitda_margin - 0.02), (ebitda_margin - 0.01), ebitda_margin]),
+        ("EBITDA 利润率", [(ebitda_margin - 0.02), (ebitda_margin - 0.01), ebitda_margin]),
     ]
     for c, year in enumerate(years, start=2):
         cell = hist.cell(row=3, column=c, value=year)
@@ -117,20 +148,21 @@ def build_workbook(
         write_label(hist, r, 1, metric, bold=True)
         for c, value in enumerate(values, start=2):
             write_input(hist, r, c, value)
-            if "Margin" in metric:
+            if "利润率" in metric:
                 hist.cell(row=r, column=c).number_format = "0.0%"
             else:
                 hist.cell(row=r, column=c).number_format = "$#,##0.0"
     hist.freeze_panes = "B4"
+    add_historical_chart(hist)
 
-    ops = wb.create_sheet("Operating Metrics")
-    write_header(ops, 1, "Operating Metrics")
+    ops = wb.create_sheet("经营指标")
+    write_header(ops, 1, "经营指标")
     op_rows = [
-        ("Enterprise Revenue Mix", 0.68),
-        ("Top 10 Customer Concentration", 0.41),
-        ("R&D Intensity", 0.32),
-        ("Estimated Customers / Programs", 28),
-        ("Revenue per Program ($mm)", max(revenue / 28.0, 0.1)),
+        ("企业客户收入占比", 0.68),
+        ("前十大客户集中度", 0.41),
+        ("研发投入强度", 0.32),
+        ("估算客户/项目数", 28),
+        ("单项目收入（人民币百万元）", max(revenue / 28.0, 0.1)),
     ]
     for idx, (metric, value) in enumerate(op_rows, start=3):
         write_label(ops, idx, 1, metric, bold=True)
@@ -140,14 +172,15 @@ def build_workbook(
         elif isinstance(value, float):
             ops.cell(row=idx, column=2).number_format = "$#,##0.0"
     ops.freeze_panes = "A3"
+    add_ops_chart(ops)
 
-    market = wb.create_sheet("Market Analysis")
-    write_header(market, 1, "Market Analysis")
+    market = wb.create_sheet("市场与银行切入")
+    write_header(market, 1, "市场与银行切入")
     market_rows = [
-        ("Theme", f"{vertical} platform with strategic relevance in {geography}"),
-        ("Primary Buyers", "Large enterprises, regulated institutions, public-sector or strategic procurement buyers"),
-        ("Banking Relevance", "Potential fit for cash management, project finance, working capital, strategic banking coverage, and capital markets dialogue"),
-        ("Key Catalysts", infer_growth_case(vertical)),
+        ("核心主题", f"{vertical} 赛道，在 {geography} 具备战略重要性"),
+        ("核心客户", "大型企业、监管行业客户、政府/战略采购主体"),
+        ("银行切入点", "可围绕现金管理、项目融资、营运资金、供应链金融与资本市场对话切入"),
+        ("关键催化因素", infer_growth_case(vertical)),
     ]
     for idx, (metric, value) in enumerate(market_rows, start=3):
         write_label(market, idx, 1, metric, bold=True)
@@ -156,37 +189,37 @@ def build_workbook(
     market.column_dimensions["A"].width = 24
     market.column_dimensions["B"].width = 100
 
-    highlights = wb.create_sheet("Investment Highlights")
-    write_header(highlights, 1, "Investment Highlights")
+    highlights = wb.create_sheet("投资亮点")
+    write_header(highlights, 1, "投资亮点")
     for idx, bullet in enumerate(investment_highlights, start=3):
         highlights.cell(row=idx, column=1, value=f"- {bullet}")
     highlights.column_dimensions["A"].width = 130
 
-    risks = wb.create_sheet("Key Risks")
-    write_header(risks, 1, "Key Risks")
+    risks = wb.create_sheet("关键风险")
+    write_header(risks, 1, "关键风险")
     for idx, bullet in enumerate(key_risks, start=3):
         risks.cell(row=idx, column=1, value=f"- {bullet}")
     risks.column_dimensions["A"].width = 130
 
-    banking = wb.create_sheet("Banking Angle")
-    write_header(banking, 1, "Banking Angle")
+    banking = wb.create_sheet("银行行动建议")
+    write_header(banking, 1, "银行行动建议")
     for idx, bullet in enumerate(contact_rationale, start=3):
         banking.cell(row=idx, column=1, value=f"- {bullet}")
     banking.column_dimensions["A"].width = 130
 
-    assumptions = wb.create_sheet("Assumptions")
-    write_header(assumptions, 1, "Assumptions")
+    assumptions = wb.create_sheet("关键假设")
+    write_header(assumptions, 1, "关键假设")
     rows = [
-        ("Revenue Base ($mm)", revenue),
-        ("EBITDA Margin", ebitda_margin),
-        ("Vertical", vertical),
-        ("Geography", geography),
-        ("Source Note", source_note),
+        ("收入基数（人民币百万元）", revenue),
+        ("EBITDA 利润率", ebitda_margin),
+        ("行业赛道", vertical),
+        ("主要区域", geography),
+        ("来源说明", source_note),
     ]
     for idx, (label, value) in enumerate(rows, start=3):
         write_label(assumptions, idx, 1, label, bold=True)
         if isinstance(value, float):
-            fmt = "0.0%" if label == "EBITDA Margin" else "$#,##0.0"
+            fmt = "0.0%" if label == "EBITDA 利润率" else "$#,##0.0"
             write_input(assumptions, idx, 2, value, fmt)
         else:
             write_input(assumptions, idx, 2, value)
@@ -214,31 +247,31 @@ def build_summary(
     path.write_text(
         "\n".join(
             [
-                f"# {company} - Preliminary Datapack",
+                f"# {company} - 初步银行覆盖 Datapack",
                 "",
-                "## Company Overview",
+                "## 公司概况",
                 business_description,
                 "",
-                "## Snapshot",
-                f"- Vertical: {vertical}",
-                f"- Geography: {geography}",
-                f"- Revenue: ${revenue:.1f}mm",
-                f"- EBITDA Margin: {ebitda_margin:.1%}",
-                f"- EBITDA: ${ebitda:.1f}mm",
+                "## 财务快照",
+                f"- 行业赛道：{vertical}",
+                f"- 主要区域：{geography}",
+                f"- 收入：人民币 {revenue:.1f} 百万元",
+                f"- EBITDA 利润率：{ebitda_margin:.1%}",
+                f"- EBITDA：人民币 {ebitda:.1f} 百万元",
                 "",
-                "## Banking Relevance",
+                "## 银行切入点",
                 *[f"- {item}" for item in contact_rationale],
                 "",
-                "## Investment Highlights",
+                "## 投资亮点",
                 *[f"- {item}" for item in investment_highlights],
                 "",
-                "## Key Risks",
+                "## 关键风险",
                 *[f"- {item}" for item in key_risks],
                 "",
-                "## Deliverables",
-                "- Excel workbook with executive summary, historical financials, operating metrics, market context, risks, banking angle, and assumptions.",
+                "## 交付内容",
+                "- Excel 工作簿包含执行摘要、历史财务、经营指标、市场与银行切入、投资亮点、关键风险、银行行动建议和关键假设。",
                 "",
-                "## Validation Note",
+                "## 校验说明",
                 f"- {source_note}",
             ]
         )
@@ -269,33 +302,33 @@ def main() -> None:
     summary_out.parent.mkdir(parents=True, exist_ok=True)
 
     business_description = args.business_description or (
-        f"{args.company} operates in {args.vertical} and is being screened as a preliminary banking relationship target in {args.geography}."
+        f"{args.company} 属于 {args.vertical} 赛道，当前作为 {args.geography} 区域内的初步银行覆盖目标进行筛查。"
     )
     source_note = args.source_note or (
-        "This first-pass datapack is generated from prompt-supplied facts and should be validated against filings, management materials, and external diligence sources before client use."
+        "本版为基于提示词事实生成的一版内部初稿，正式对外或进入授信/投行材料前，仍需结合审计财报、公告、管理层材料和外部尽调进一步校验。"
     )
     contact_rationale = normalize_bullets(
         args.contact_rationale,
         [
-            f"Relevant coverage target in {args.vertical} with potential demand for cash management and strategic banking products.",
-            "Use the datapack as a first-call briefing pack, then replace assumptions with verified filings or diligence materials.",
-            "Escalate to a fuller workup if management access, financing activity, or strategic events make the account active.",
+            f"{args.vertical} 赛道具备明确的银行覆盖逻辑，可围绕现金管理和战略金融产品切入。",
+            "可将本 datapack 用作首次拜访或内部预沟通底稿，后续用已验证披露材料替换假设。",
+            "若管理层接触、融资动作或战略事件升温，应尽快升级为更完整的尽调包或交易材料。",
         ],
     )
     key_risks = normalize_bullets(
         args.key_risks,
         [
-            "Financial assumptions remain preliminary until validated against audited statements or public filings.",
-            "Customer concentration, margin durability, and funding profile should be checked before external circulation.",
-            "Sector-specific regulatory, supply-chain, or geopolitical risks may materially affect the underwriting view.",
+            "财务假设在审计报表或公开披露验证前，仍属于初步判断。",
+            "客户集中度、利润率持续性和融资结构在对外使用前必须进一步核查。",
+            "行业监管、供应链或地缘政治因素可能显著影响授信和交易判断。",
         ],
     )
     investment_highlights = normalize_bullets(
         args.investment_highlights,
         [
-            f"Clear positioning in {args.vertical} with identifiable banking coverage logic.",
-            "Workbook structured for quick upgrade from first-pass screening to fuller diligence pack.",
-            "Financial summary, risk framing, and banking angle are consolidated into a single package for internal review.",
+            f"在 {args.vertical} 赛道定位清晰，银行覆盖与产品切入逻辑明确。",
+            "工作簿结构可从初筛快速升级为完整尽调包或内部立项材料。",
+            "财务快照、风险框架和银行切入点已统一整理到单一包内，便于内部评审。",
         ],
     )
 

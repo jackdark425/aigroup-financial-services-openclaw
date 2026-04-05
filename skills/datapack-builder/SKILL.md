@@ -56,6 +56,7 @@ python scripts/build_minimal_datapack.py \
 Markdown minimum standard after the deterministic script runs:
 
 - Keep the markdown deliverable at the user-requested output path.
+- Default to Chinese output unless the user explicitly asks for English.
 - Rewrite it into a banker-readable note with these sections when facts are available:
   - Company identity
   - Business description

@@ -28,6 +28,7 @@ Execution rules for OpenClaw:
 
 - Use the bundled deterministic script before attempting any free-form Python generation.
 - Call Python directly. Do not use `cd ... && python ...`.
+- Do not prepend `mkdir`, `mkdir -p`, shell chaining, or any other setup command. The bundled script already creates parent output directories when needed.
 - Do not create temporary Python files for the first pass.
 - Preferred command shape:
 

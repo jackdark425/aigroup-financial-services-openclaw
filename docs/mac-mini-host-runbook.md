@@ -197,6 +197,69 @@ Always keep a backup before patching:
 cp <runtime-file> <runtime-file>.bak-<reason>
 ```
 
+## After OpenClaw Upgrade
+
+If OpenClaw is upgraded on the host, assume the local runtime patches may have been overwritten.
+
+Use this post-upgrade sequence:
+
+1. Confirm the upgrade actually completed:
+
+```bash
+openclaw --version
+```
+
+2. Restart the gateway once:
+
+```bash
+launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway
+```
+
+3. Clear the host logs:
+
+```bash
+python3 -c 'from pathlib import Path; home = Path.home(); [(home / ".openclaw/logs/gateway.err.log").write_text(""), (home / ".openclaw/logs/node.err.log").write_text("")]'
+```
+
+4. Re-run the banker smoke path:
+
+```bash
+openclaw plugins inspect aigroup-lead-discovery-openclaw
+openclaw plugins inspect aigroup-financial-services-openclaw
+openclaw skills list
+```
+
+5. If these warnings come back:
+
+- `pricing bootstrap failed: TypeError: fetch failed`
+- `remote bin probe timed out`
+
+re-apply the host-local runtime patch to these files:
+
+- `~/.npm-global/lib/node_modules/openclaw/dist/usage-format-DD-9lWqe.js`
+- `~/.npm-global/lib/node_modules/openclaw/dist/skills-remote-fYLkhhDd.js`
+
+Recommended minimal patch:
+
+- change the pricing bootstrap line from `log.warn(...)` to `log.info(...)`
+- change the remote bin probe timeout line from `log.warn(...)` to `log.info(...)`
+
+This keeps the warnings from polluting `gateway.err.log` while preserving runtime behavior.
+
+6. Restart the gateway again after patching:
+
+```bash
+launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway
+```
+
+7. Clear logs one more time and rerun a real plugin call:
+
+```bash
+openclaw agent --agent aigroup-clean --session-id post-update-check -m "Use the client-initial-screening skill for 华为技术有限公司. Return company summary, reason_to_contact, risk_flags, and next_steps."
+```
+
+If the call succeeds and the logs remain quiet, the host is back in the expected steady state.
+
 ## Validation Standard
 
 After cleanup, all of the following should be true:

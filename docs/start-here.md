@@ -46,11 +46,13 @@ Use `aigroup-lead-discovery-openclaw` first when you need:
 
 - company identity confirmation
 - public-event scanning
+- customer investigation
 - outreach triggers
 - first-meeting briefing
 
 Use `aigroup-financial-services-openclaw` first when you need:
 
+- customer analysis packs
 - datapacks
 - DCF or LBO models
 - decks
@@ -66,15 +68,15 @@ For most workflows, the best order is:
 Lead-discovery first run:
 
 ```text
-Use the client-initial-screening skill for 华为技术有限公司.
-Return company summary, reason_to_contact, risk_flags, and next_steps.
+Use the customer-investigation skill for 华为技术有限公司.
+Generate a Chinese internal customer investigation report covering company identity, business overview, risk review, banking entry points, and next steps.
 ```
 
 Financial-services first run:
 
 ```text
-Use datapack-builder to create a first-pass datapack for 华为技术有限公司 based on available public company context.
-Include key business description, headline financial context, major assumptions, and a concise deliverable summary.
+Use the customer-analysis-pack skill for 华为技术有限公司.
+Turn the investigation memo into a Chinese internal customer analysis pack with financial snapshot, banking product fit, risks, and next actions.
 ```
 
 ## 6. First End-to-End Flow
@@ -82,15 +84,15 @@ Include key business description, headline financial context, major assumptions,
 Step 1:
 
 ```text
-Use the client-initial-screening skill for 华为技术有限公司.
-Return company summary, reason_to_contact, risk_flags, and next_steps.
+Use the customer-investigation skill for 华为技术有限公司.
+Generate a Chinese internal customer investigation report covering company identity, business overview, risk review, banking entry points, and next steps.
 ```
 
 Step 2:
 
 ```text
-Use datapack-builder to create a first-pass datapack for 华为技术有限公司 based on the screening summary and available public company context.
-Include a short assumptions section and produce a workbook-ready deliverable summary.
+Use the customer-analysis-pack skill for 华为技术有限公司.
+Turn the investigation memo into a Chinese internal customer analysis pack, then produce a workbook-backed deliverable if the facts are sufficient.
 ```
 
 ## 7. If Something Looks Wrong

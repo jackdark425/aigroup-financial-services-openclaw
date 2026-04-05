@@ -115,9 +115,9 @@ For real-world use, treat installation as a two-suite flow and install this plug
 
 Recommended stack:
 
-- `aigroup-lead-discovery-openclaw` for company intelligence and external lead signals
+- `aigroup-lead-discovery-openclaw` for company intelligence, customer investigation, and external lead signals
 - `aigroup-fmp-mcp`, `aigroup-market-mcp`, and `aigroup-finnhub-mcp` as AIGroup data services
-- `aigroup-financial-services-openclaw` for financial modeling, analysis workflows, and deliverable generation
+- `aigroup-financial-services-openclaw` for customer analysis, financial modeling, and deliverable generation
 
 ## Root Bundle
 
@@ -165,6 +165,16 @@ Quick install guide:
 - [docs/example-prompts.md](docs/example-prompts.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/which-suite-to-use.md](docs/which-suite-to-use.md)
+
+## Default Customer Workflow
+
+The default banker path is now:
+
+1. `aigroup-lead-discovery-openclaw/customer-investigation`
+2. `aigroup-financial-services-openclaw/customer-analysis-pack`
+3. `datapack-builder`, `dcf-model`, or other downstream modeling skills only when needed
+
+This keeps the first pass focused on banker-usable customer investigation and customer analysis before moving into heavier finance deliverables.
 
 Published package:
 

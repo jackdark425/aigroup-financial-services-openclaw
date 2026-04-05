@@ -161,6 +161,7 @@ Quick install guide:
 
 - [docs/quickstart.md](docs/quickstart.md)
 - [docs/banker-stack.md](docs/banker-stack.md)
+- [docs/example-prompts.md](docs/example-prompts.md)
 
 Published package:
 

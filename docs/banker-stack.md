@@ -102,3 +102,4 @@ That means:
 
 - [Quickstart](./quickstart.md)
 - [Test Report](./test-report.md)
+- [Example Prompts](./example-prompts.md)

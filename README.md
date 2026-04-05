@@ -160,6 +160,7 @@ Then restart the gateway before testing.
 Quick install guide:
 
 - [docs/quickstart.md](docs/quickstart.md)
+- [docs/banker-stack.md](docs/banker-stack.md)
 
 Published package:
 

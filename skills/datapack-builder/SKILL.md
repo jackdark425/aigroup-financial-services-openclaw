@@ -24,6 +24,8 @@ python scripts/build_minimal_datapack.py \
 
 This path is intentionally minimal and is meant to prove the skill can reliably emit a workbook plus a written summary before using more open-ended data collection flows.
 
+For direct OpenClaw use, treat the deterministic script output as the base artifact, not the finished narrative. After the workbook is created, upgrade the markdown deliverable into an internally usable banking coverage note. Do not stop at a two-line smoke summary if the user asked for a usable datapack or briefing.
+
 Execution rules for OpenClaw:
 
 - Use the bundled deterministic script before attempting any free-form Python generation.
@@ -39,11 +41,32 @@ python scripts/build_minimal_datapack.py \
   --ebitda-margin 0.22 \
   --vertical "Vertical SaaS" \
   --geography "United States" \
+  --business-description "Short factual company description for internal banking review." \
+  --source-note "State whether the numbers come from filings, management materials, or prompt-supplied assumptions." \
+  --contact-rationale "Reason 1|Reason 2|Reason 3" \
+  --key-risks "Risk 1|Risk 2|Risk 3" \
+  --investment-highlights "Highlight 1|Highlight 2|Highlight 3" \
   --xlsx-out /tmp/datapack.xlsx \
   --summary-out /tmp/datapack.md
 ```
 
 - Only move to custom scripting after the deterministic script path has failed or the user explicitly asks for a bespoke workbook structure.
+- When the prompt already contains company research, banking angle, or risk notes, pass them into the deterministic script via the optional narrative flags instead of dropping them.
+
+Markdown minimum standard after the deterministic script runs:
+
+- Keep the markdown deliverable at the user-requested output path.
+- Rewrite it into a banker-readable note with these sections when facts are available:
+  - Company identity
+  - Business description
+  - Banking relationship angle
+  - Financial context
+  - Key risks
+  - Investment highlights
+  - Preliminary assessment
+  - Suggested next steps
+- Clearly label assumptions as preliminary if they are not yet validated.
+- Do not use phrases such as "fictional facts" or "smoke testing" in user-facing output unless the user explicitly asked for a test artifact.
 
 **Important:** Use the xlsx skill for all Excel file creation and manipulation throughout this workflow.
 

@@ -26,6 +26,26 @@ description: Turn a customer investigation or company-intelligence brief into a 
 
 ## 工作流程
 
+## 稳定脚本路径
+
+当 OpenClaw 需要稳定输出客户分析包时，优先直接调用：
+
+```bash
+python skills/customer-analysis-pack/scripts/build_customer_analysis_pack.py \
+  --company "目标企业" \
+  --revenue 800 \
+  --ebitda-margin 0.12 \
+  --summary "客户概况摘要" \
+  --fit-matrix "现金管理|高|理由|触发条件|供应链金融|高|理由|触发条件" \
+  --risks "风险1|风险2|风险3" \
+  --industry-observations "观察1|观察2|观察3" \
+  --next-steps "动作1|动作2|动作3" \
+  --xlsx-out /tmp/customer-analysis-pack.xlsx \
+  --md-out /tmp/customer-analysis-pack.md
+```
+
+如已有调查稿，可先提炼核心字段，再喂给该脚本，确保至少输出一版稳定的中文分析包和工作簿。
+
 ### Step 1: 吸收前序调查结果
 
 从输入中提取至少这些字段：
@@ -52,9 +72,10 @@ description: Turn a customer investigation or company-intelligence brief into a 
 
 优先顺序：
 
-1. `datapack-builder`
+1. `customer-analysis-pack` 稳定脚本路径
+2. `datapack-builder`
    - 生成 workbook 和基础 markdown
-2. 按需补充：
+3. 按需补充：
    - `competitive-analysis`
    - `comps-analysis`
    - `dcf-model`（仅当用户明确需要估值）

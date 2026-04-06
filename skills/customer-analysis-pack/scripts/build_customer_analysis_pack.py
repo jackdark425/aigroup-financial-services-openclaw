@@ -21,6 +21,24 @@ def split_items(raw: str | None, fallback: list[str]) -> list[str]:
     return values or fallback
 
 
+def parse_fit_matrix(raw: str | None, fallback: list[str]) -> list[tuple[str, str, str, str]]:
+    base = raw or "||".join(fallback)
+    row_candidates = [item.strip() for item in base.split("||") if item.strip()]
+
+    if len(row_candidates) == 1 and "|" in row_candidates[0]:
+        flat = [item.strip() for item in row_candidates[0].split("|") if item.strip()]
+        if len(flat) >= 4 and len(flat) % 4 == 0:
+            row_candidates = ["|".join(flat[i : i + 4]) for i in range(0, len(flat), 4)]
+
+    matrix: list[tuple[str, str, str, str]] = []
+    for item in row_candidates:
+        parts = [part.strip() for part in item.split("|")]
+        while len(parts) < 4:
+            parts.append("")
+        matrix.append((parts[0], parts[1], parts[2], parts[3]))
+    return matrix
+
+
 def header(ws, row: int, text: str) -> None:
     c = ws.cell(row=row, column=1, value=text)
     c.font = Font(bold=True, color="FFFFFF")
@@ -217,7 +235,7 @@ def main() -> None:
     summary = args.summary or (
         f"{args.company} 已完成初步客户调查，当前适合进入银行内部分析阶段，重点评估产品切入点、财务可核实性和风险边界。"
     )
-    fit_items = split_items(
+    fit_matrix = parse_fit_matrix(
         args.fit_matrix,
         [
             "现金管理|高|资金沉淀和流动性管理空间明确|建立基础账户关系后",
@@ -227,12 +245,6 @@ def main() -> None:
             "投行服务|中|若存在融资、并购或资本运作诉求，可跟进|资本动作出现后",
         ],
     )
-    fit_matrix = []
-    for item in fit_items:
-        parts = [part.strip() for part in item.split("|")]
-        while len(parts) < 4:
-            parts.append("")
-        fit_matrix.append((parts[0], parts[1], parts[2], parts[3]))
 
     risks = split_items(
         args.risks,

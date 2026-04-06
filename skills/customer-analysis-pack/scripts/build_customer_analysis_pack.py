@@ -71,6 +71,24 @@ def add_fit_chart(ws) -> None:
     ws.add_chart(chart, "D3")
 
 
+def add_risk_chart(ws) -> None:
+    chart = BarChart()
+    chart.title = "风险等级概览"
+    data = Reference(ws, min_col=2, max_col=2, min_row=3, max_row=6)
+    cats = Reference(ws, min_col=1, max_col=1, min_row=3, max_row=6)
+    chart.add_data(data, titles_from_data=False)
+    chart.set_categories(cats)
+    chart.style = 11
+    chart.height = 7
+    chart.width = 11
+    ws.add_chart(chart, "E3")
+
+
+def risk_score(level: str) -> int:
+    mapping = {"高": 5, "中高": 4, "中": 3, "中低": 2, "低": 1}
+    return mapping.get(level, 3)
+
+
 def fit_score(label_text: str) -> int:
     mapping = {"高": 5, "中高": 4, "中": 3, "中低": 2, "低": 1}
     return mapping.get(label_text, 3)
@@ -82,6 +100,9 @@ def build_workbook(
     ebitda_margin: float,
     summary: str,
     fit_matrix: list[tuple[str, str, str, str]],
+    risk_rows: list[tuple[str, str, str]],
+    peer_rows: list[tuple[str, str, str]],
+    source_rows: list[str],
     next_actions: list[tuple[str, str, str, str]],
 ) -> Workbook:
     wb = Workbook()
@@ -124,22 +145,39 @@ def build_workbook(
 
     risk = wb.create_sheet("风险判断")
     header(risk, 1, "风险判断")
-    risk_rows = [
-        ("财务风险", "中高", "需继续核实现金流、盈利能力和授信准入条件"),
-        ("经营风险", "中", "客户集中度、产品迭代与商业化节奏仍需跟踪"),
-        ("合规风险", "低", "若司法和经营异常记录较少，可作为相对正面信号"),
-        ("行业风险", "中高", "受政策、供应链和竞争格局影响较大"),
-    ]
-    for col, name in enumerate(["类别", "等级", "说明"], start=1):
+    for col, name in enumerate(["类别", "分值", "等级", "说明"], start=1):
         cell = risk.cell(row=2, column=col, value=name)
         cell.fill = SUB_FILL
         cell.font = Font(bold=True)
     for row, values in enumerate(risk_rows, start=3):
-        for col, value in enumerate(values, start=1):
-            risk.cell(row=row, column=col, value=value)
+        risk.cell(row=row, column=1, value=values[0])
+        risk.cell(row=row, column=2, value=risk_score(values[1]))
+        risk.cell(row=row, column=3, value=values[1])
+        risk.cell(row=row, column=4, value=values[2])
     risk.column_dimensions["A"].width = 16
     risk.column_dimensions["B"].width = 10
-    risk.column_dimensions["C"].width = 70
+    risk.column_dimensions["C"].width = 10
+    risk.column_dimensions["D"].width = 70
+    add_risk_chart(risk)
+
+    peers = wb.create_sheet("同业观察")
+    header(peers, 1, "同业观察")
+    for col, name in enumerate(["同业", "定位", "观察"], start=1):
+        cell = peers.cell(row=2, column=col, value=name)
+        cell.fill = SUB_FILL
+        cell.font = Font(bold=True)
+    for row, values in enumerate(peer_rows, start=3):
+        for col, value in enumerate(values, start=1):
+            peers.cell(row=row, column=col, value=value)
+    peers.column_dimensions["A"].width = 18
+    peers.column_dimensions["B"].width = 18
+    peers.column_dimensions["C"].width = 70
+
+    sources = wb.create_sheet("来源锚点")
+    header(sources, 1, "来源锚点")
+    for idx, item in enumerate(source_rows, start=3):
+        sources.cell(row=idx, column=1, value=f"- {item}")
+    sources.column_dimensions["A"].width = 120
 
     actions = wb.create_sheet("下一步动作")
     header(actions, 1, "下一步动作")
@@ -166,6 +204,9 @@ def build_markdown(
     fit_matrix: list[tuple[str, str, str, str]],
     risks: list[str],
     industry: list[str],
+    peers: list[str],
+    events: list[str],
+    sources: list[str],
     next_steps: list[str],
 ) -> str:
     lines = [
@@ -205,7 +246,25 @@ def build_markdown(
     lines.extend([f"- {item}" for item in industry])
     lines += [
         "",
-        "## 六、客户经理下一步动作",
+        "## 六、同业观察",
+        "",
+    ]
+    lines.extend([f"- {item}" for item in peers])
+    lines += [
+        "",
+        "## 七、近期事件线索",
+        "",
+    ]
+    lines.extend([f"- {item}" for item in events])
+    lines += [
+        "",
+        "## 八、来源与核验锚点",
+        "",
+    ]
+    lines.extend([f"- {item}" for item in sources])
+    lines += [
+        "",
+        "## 九、客户经理下一步动作",
         "",
     ]
     lines.extend([f"{idx + 1}. {item}" for idx, item in enumerate(next_steps)])
@@ -227,6 +286,9 @@ def main() -> None:
     parser.add_argument("--fit-matrix", default="")
     parser.add_argument("--risks", default="")
     parser.add_argument("--industry-observations", default="")
+    parser.add_argument("--peer-observations", default="")
+    parser.add_argument("--event-signals", default="")
+    parser.add_argument("--source-anchors", default="")
     parser.add_argument("--next-steps", default="")
     parser.add_argument("--xlsx-out", required=True)
     parser.add_argument("--md-out", required=True)
@@ -254,12 +316,51 @@ def main() -> None:
             "行业风险：受政策、地缘政治、供应链和竞争格局影响较大。",
         ],
     )
+    risk_rows = [
+        ("财务风险", "中高", risks[0] if len(risks) > 0 else "需结合审计材料继续核验"),
+        ("经营风险", "中", risks[1] if len(risks) > 1 else "需持续跟踪客户结构和商业化能力"),
+        ("行业风险", "中高", risks[2] if len(risks) > 2 else "受政策、供应链和竞争格局影响较大"),
+        ("合规风险", "低", "若司法和经营异常记录较少，可作为相对正面信号"),
+    ]
     industry = split_items(
         args.industry_observations,
         [
             "行业景气与政策支持度较高，但竞争也更快集中到头部玩家。",
             "同业比较应重点关注技术路线、客户结构、盈利能力和生态能力。",
             "若处于国产替代或战略新兴赛道，银行覆盖价值通常高于传统行业平均水平。",
+        ],
+    )
+    peer_observations = split_items(
+        args.peer_observations,
+        [
+            "华为昇腾：生态能力强、政府项目优势明显，是最直接的强势对手。",
+            "海光信息：在国产算力和政府采购体系中具备稳定存在感。",
+            "燧原科技等未上市同业：融资节奏快，但商业化与公开透明度较弱。",
+        ],
+    )
+    peer_rows = []
+    for item in peer_observations:
+        if "：" in item:
+            left, right = item.split("：", 1)
+        elif ":" in item:
+            left, right = item.split(":", 1)
+        else:
+            left, right = "同业", item
+        peer_rows.append((left.strip(), "同业观察", right.strip()))
+    event_signals = split_items(
+        args.event_signals,
+        [
+            "关注审计年报发布时间、重大中标公告和供应链合作动态。",
+            "跟踪管理层表态、再融资动作和政府智算中心相关项目。",
+            "监测招聘与区域扩张线索，判断业务推进节奏。",
+        ],
+    )
+    source_anchors = split_items(
+        args.source_anchors,
+        [
+            "客户调查稿及其引用的 PrimeMatrixData / Tianyancha / 公开披露信息。",
+            "审计年报、季报、招股书和公司公告是正式分析的核心核验来源。",
+            "若进入授信或投行流程，应进一步补充管理层材料和外部尽调结论。",
         ],
     )
     next_steps = split_items(
@@ -282,6 +383,9 @@ def main() -> None:
         args.ebitda_margin,
         summary,
         fit_matrix,
+        risk_rows,
+        peer_rows,
+        source_anchors,
         next_action_rows,
     )
     xlsx_out = Path(args.xlsx_out)
@@ -298,6 +402,9 @@ def main() -> None:
             fit_matrix,
             risks,
             industry,
+            peer_observations,
+            event_signals,
+            source_anchors,
             next_steps,
         ),
         encoding="utf-8",

@@ -178,7 +178,7 @@ This keeps the first pass focused on banker-usable customer investigation and cu
 
 Published package:
 
-- `aigroup-financial-services-openclaw@0.1.3`
+- `aigroup-financial-services-openclaw@0.1.5`
 
 Recommended companion package:
 

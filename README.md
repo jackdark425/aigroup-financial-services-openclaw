@@ -6,6 +6,28 @@ Install this as the financial workflow suite after `aigroup-lead-discovery-openc
 
 This plugin now ships skills and commands only by default, and expects data collection to come from AIGroup lead-intelligence plugins and MCP services.
 
+It also now exposes four explicit office-deliverable entrypoints inside the plugin itself:
+
+- `word-deliverable`
+- `excel-deliverable`
+- `ppt-deliverable`
+- `pdf-deliverable`
+
+These wrapper skills are designed to route banker workflows into the host's actual office capabilities when available. On `macmini`, the verified mapping is:
+
+- Word -> `minimax-docx`
+- Excel -> `minimax-xlsx`
+- PDF -> `minimax-pdf`
+- PPT -> `pptx-generator` + `ppt-editing-skill` + `ppt-orchestra-skill` + `slide-making-skill`
+
+They fall back to standard `docx` / `xlsx` / `pptx` / `pdf` workflows only when those host skills are not exposed.
+
+Important: this MiniMax / office layer is **optional**.
+
+If a user already has compatible document / spreadsheet / PDF / PPT skills installed on the host, they can skip any extra MiniMax setup and use this plugin directly.
+
+If they do not, they can install a compatible office skill set later as an optional enhancement.
+
 This repository is a compatibility layer, not a claim of official Anthropic or OpenClaw endorsement.
 
 It now also exposes a standalone root-level Claude bundle so the repository itself can be installed and published as a single OpenClaw plugin:
@@ -119,6 +141,31 @@ Recommended stack:
 - `aigroup-fmp-mcp`, `aigroup-market-mcp`, and `aigroup-finnhub-mcp` as AIGroup data services
 - `aigroup-financial-services-openclaw` for customer analysis, financial modeling, and deliverable generation
 
+## Office Surface Inside The Plugin
+
+The plugin now includes explicit office-oriented commands and skills so the second half of the banker stack can move from analysis to deliverable packaging without leaving the plugin surface:
+
+- `word` -> `word-deliverable`
+- `excel` -> `excel-deliverable`
+- `ppt` / `ppts` -> `ppt-deliverable`
+- `pdf` -> `pdf-deliverable`
+
+Recommended chaining:
+
+1. research or analyze with finance skills such as `customer-analysis-pack`, `datapack-builder`, `comps-analysis`, `dcf-model`, or `lbo-model`
+2. package the output through `word-deliverable`, `excel-deliverable`, `ppt-deliverable`, or `pdf-deliverable`
+3. use PDF last when the goal is a stable distribution artifact
+
+This office surface is intentionally packaged as a compatibility layer and user-facing front door.
+
+- It is meant to make banker workflows easier to use.
+- It is not meant to force every user to install MiniMax office skills.
+- Users who already have equivalent host skills can skip the optional office companion setup entirely.
+
+See:
+
+- [docs/minimax-office-optional.md](docs/minimax-office-optional.md)
+
 ## Root Bundle
 
 The repository root now provides a standalone bundle with:
@@ -163,6 +210,7 @@ Quick install guide:
 - [docs/quickstart.md](docs/quickstart.md)
 - [docs/banker-stack.md](docs/banker-stack.md)
 - [docs/example-prompts.md](docs/example-prompts.md)
+- [docs/minimax-office-optional.md](docs/minimax-office-optional.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/which-suite-to-use.md](docs/which-suite-to-use.md)
 
@@ -178,7 +226,7 @@ This keeps the first pass focused on banker-usable customer investigation and cu
 
 Published package:
 
-- `aigroup-financial-services-openclaw@0.1.5`
+- `aigroup-financial-services-openclaw@0.1.7`
 
 Recommended companion package:
 

@@ -40,6 +40,8 @@ Use the host's PPT stack when available:
 - `ppt-orchestra-skill`
 - `slide-making-skill`
 
+Do not try to prove PPT availability with `which`, PATH checks, or binary-name probing. Treat these as host skills first, then fall back to the standard `pptx` workflow if they are not exposed.
+
 ### Step 4: Deliver
 
 Provide:

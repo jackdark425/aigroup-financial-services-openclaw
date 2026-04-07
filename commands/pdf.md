@@ -25,7 +25,7 @@ Use `skill: "pdf-deliverable"`.
 
 ### Step 3: Convert and verify
 
-Use `minimax-pdf` when the host exposes it.
+Prefer a host-routed `minimax-pdf` skill when available, but do not use `which`, PATH checks, or executable-name probing to decide that. If the host skill is not clearly exposed, continue with the standard `pdf` path.
 
 Check readability after conversion:
 

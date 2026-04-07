@@ -34,7 +34,7 @@ Prefer outputs from:
 - `merger-model`
 - `deal-tracker`
 
-Use `minimax-xlsx` when the host exposes it.
+Prefer the bundled `minimax-xlsx` skill included in this plugin, but do not use `which`, PATH checks, or executable-name probing to decide that. If the bundled skill is not clearly exposed, continue with the standard `xlsx` path.
 
 ### Step 4: Deliver
 

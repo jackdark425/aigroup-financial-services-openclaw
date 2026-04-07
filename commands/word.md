@@ -34,7 +34,7 @@ Prefer prior outputs from:
 - `dcf-model`
 - `lbo-model`
 
-Use `minimax-docx` when the host exposes it.
+Prefer the bundled `minimax-docx` skill included in this plugin, but do not use `which`, PATH checks, or executable-name probing to decide that. If the bundled skill is not clearly exposed, continue with the standard `docx` path.
 
 ### Step 4: Deliver
 

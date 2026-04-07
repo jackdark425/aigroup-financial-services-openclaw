@@ -6,27 +6,35 @@ Install this as the financial workflow suite after `aigroup-lead-discovery-openc
 
 This plugin now ships skills and commands only by default, and expects data collection to come from AIGroup lead-intelligence plugins and MCP services.
 
-It also now exposes four explicit office-deliverable entrypoints inside the plugin itself:
+It now exposes four explicit office-deliverable entrypoints inside the plugin itself:
 
 - `word-deliverable`
 - `excel-deliverable`
 - `ppt-deliverable`
 - `pdf-deliverable`
 
-These wrapper skills are designed to route banker workflows into the host's actual office capabilities when available. On `macmini`, the verified mapping is:
+This plugin now also vendors two MiniMax-origin office skills directly under `skills/`:
+
+- `minimax-docx` (MIT, included in this plugin)
+- `minimax-xlsx` (MIT, included in this plugin)
+
+These wrapper skills route banker workflows into the plugin's bundled office capabilities first. On `macmini`, the verified mapping is:
 
 - Word -> `minimax-docx`
 - Excel -> `minimax-xlsx`
 - PDF -> `minimax-pdf`
 - PPT -> `pptx-generator` + `ppt-editing-skill` + `ppt-orchestra-skill` + `slide-making-skill`
 
-They fall back to standard `docx` / `xlsx` / `pptx` / `pdf` workflows only when those host skills are not exposed.
+For Word and Excel, the bundled MiniMax-derived skills are now part of the install surface of this plugin. PPT and PDF still fall back to host capabilities or standard `pptx` / `pdf` workflows when needed.
 
-Important: this MiniMax / office layer is **optional**.
+Important routing note: these wrappers should not use shell-level `which` checks, PATH probing, or same-name executable discovery as the test for host office capability. On some hosts, those capabilities exist as routed skills without matching shell binaries.
 
-If a user already has compatible document / spreadsheet / PDF / PPT skills installed on the host, they can skip any extra MiniMax setup and use this plugin directly.
+Important: the MiniMax / office layer is now split:
 
-If they do not, they can install a compatible office skill set later as an optional enhancement.
+- Word and Excel MiniMax-derived skills are included in this plugin
+- PPT and PDF companion capabilities remain host-dependent / optional
+
+If a user already has compatible host skills installed, that is still fine. The plugin should simply prefer its bundled Word/Excel path and continue to use compatible host capabilities for PPT/PDF where available.
 
 This repository is a compatibility layer, not a claim of official Anthropic or OpenClaw endorsement.
 
@@ -156,11 +164,11 @@ Recommended chaining:
 2. package the output through `word-deliverable`, `excel-deliverable`, `ppt-deliverable`, or `pdf-deliverable`
 3. use PDF last when the goal is a stable distribution artifact
 
-This office surface is intentionally packaged as a compatibility layer and user-facing front door.
+This office surface is intentionally packaged as a banker-facing front door, with bundled Word/Excel support and optional host enhancement for PPT/PDF.
 
 - It is meant to make banker workflows easier to use.
-- It is not meant to force every user to install MiniMax office skills.
-- Users who already have equivalent host skills can skip the optional office companion setup entirely.
+- It is not meant to force every user to preinstall MiniMax office skills just to get Word or Excel output.
+- Users who already have equivalent host skills can still use those alongside the bundled paths.
 
 See:
 

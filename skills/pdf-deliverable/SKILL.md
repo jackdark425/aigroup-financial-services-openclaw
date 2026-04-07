@@ -24,6 +24,8 @@ If MiniMax PDF tooling is not exposed, fall back to the standard `pdf` workflow 
 
 This is an optional acceleration path. If the host already has a compatible PDF skill installed, use it directly. Do not make MiniMax PDF a hard requirement.
 
+Do not use `which`, PATH checks, or shell executable discovery as the test for PDF capability. The host may expose PDF handling as a routed skill without a shell binary named `minimax-pdf`.
+
 The core rule is:
 
 - PDF is usually the packaging layer, not the authoring layer
@@ -60,6 +62,7 @@ Check:
 - tables are not clipped
 - slide exports are legible
 - fonts and symbols survived conversion
+- absence of a shell-level MiniMax executable is not itself a blocker
 
 ## Output standard
 

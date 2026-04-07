@@ -17,13 +17,15 @@ Use this skill when the requested output should be a real Excel workbook.
 
 ## Tooling preference
 
-Prefer the host's exact MiniMax Excel skill when available:
+Prefer the bundled MiniMax-derived Excel skill shipped inside this plugin:
 
 - `minimax-xlsx`
 
-If MiniMax office tooling is not exposed, fall back to the standard `xlsx` workflow already present in the environment.
+If that bundled path is not available for any reason, fall back to the standard `xlsx` workflow already present in the environment.
 
-This is an optional acceleration path. If the host already has a compatible Excel / XLSX skill installed, use it directly. Do not block the workflow on a new MiniMax install.
+This plugin now vendors the MiniMax XLSX skill as a convenience layer. If the host already has a compatible Excel / XLSX skill installed, that is also fine, but a separate MiniMax install should no longer be required for Excel output after this plugin is installed.
+
+Do not use `which`, PATH probing, or same-name executable checks as the decision rule. A host may expose the Excel capability as a routed skill without installing a shell binary called `minimax-xlsx`.
 
 The key rule is:
 
@@ -67,6 +69,7 @@ Requirements:
 - units stated at the top of key sheets
 - clean separation of inputs, calculations, and outputs
 - no silent hardcoding of derived values in model sections
+- do not fail just because a shell-level MiniMax executable is absent
 
 ### Step 4: Pair with other office outputs when needed
 

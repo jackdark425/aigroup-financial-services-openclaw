@@ -16,13 +16,17 @@ Use this skill when the user wants a Word document as the final output surface f
 
 ## Tooling preference
 
-Prefer the host's exact MiniMax Word skill when it is available:
+Prefer the bundled MiniMax-derived Word skill shipped inside this plugin:
 
 - `minimax-docx`
 
-If the host does not expose that MiniMax path, fall back to the standard `docx` workflow already available in the environment.
+If that bundled path is not available for any reason, fall back to the standard `docx` workflow already available in the environment.
 
-This is an optional acceleration path. If the host already has a compatible Word / DOCX skill installed, use it directly. Do not require a fresh MiniMax install just to proceed.
+This plugin now vendors the MiniMax DOCX skill as a convenience layer. If the host already has a compatible Word / DOCX skill installed, that is also fine, but a separate MiniMax install should no longer be required for Word output after this plugin is installed.
+
+Do not try to detect host skills by shelling out with `which`, PATH checks, or executable-name probes. These office capabilities may exist as host-routed skills even when no same-named binary is present in the shell.
+
+Treat skill availability as a routing preference, not a shell-command discovery task.
 
 The core rule is:
 
@@ -78,6 +82,7 @@ Requirements:
 - clean tables instead of pasted ASCII blocks
 - explicit source notes where numbers matter
 - banker-readable prose, not placeholder text
+- do not block on shell-based MiniMax detection if the host already routed you into this skill successfully
 
 ### Step 4: Keep the file lineage clean
 

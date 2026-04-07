@@ -28,6 +28,8 @@ If that PPT stack is not exposed on the host, fall back to the standard `pptx` w
 
 This is an optional acceleration path. If the host already has compatible PPT skills installed, use them. Do not require separate MiniMax setup just to produce slides.
 
+Do not treat shell discovery as the source of truth. Avoid `which`, PATH checks, or binary-name probes for PPT routing because these capabilities may exist only as host skills.
+
 The core rule is:
 
 - ship a real `.pptx`
@@ -66,6 +68,7 @@ Requirements:
 - keep numbers synced with underlying models
 - match the provided template or established banker style
 - use tables/charts where they communicate better than prose
+- do not stop just because no same-named PPT executable exists in the shell
 
 ### Step 4: Review before delivery
 

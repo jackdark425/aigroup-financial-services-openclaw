@@ -5,6 +5,16 @@
   "description": "Financial modeling, analysis, and deliverables suite for OpenClaw",
   "license": "Apache-2.0",
   "type": "module",
+  "files": [
+    ".claude-plugin",
+    ".mcp.json",
+    "skills",
+    "commands",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "scripts": {
     "sync:upstream": "python3 scripts/sync_upstream.py",
     "build:bundles": "python3 scripts/build_openclaw_bundles.py",

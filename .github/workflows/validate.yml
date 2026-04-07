@@ -18,8 +18,16 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Validate repository bundle
         run: python3 scripts/validate_bundle.py .
 
       - name: Prepare release bundle
         run: python3 scripts/prepare_release_bundle.py /tmp/aigroup-financial-services-openclaw-release
+
+      - name: Verify npm publish payload
+        run: npm pack --dry-run

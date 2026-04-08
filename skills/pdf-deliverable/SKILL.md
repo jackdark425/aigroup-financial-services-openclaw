@@ -16,13 +16,13 @@ Use this skill when the user wants the final output delivered as PDF.
 
 ## Tooling preference
 
-Prefer the host's exact MiniMax PDF skill when available:
+Prefer the bundled MiniMax-derived PDF skill shipped inside this plugin:
 
 - `minimax-pdf`
 
-If MiniMax PDF tooling is not exposed, fall back to the standard `pdf` workflow in the environment.
+If that bundled path is not available for any reason, fall back to the standard `pdf` workflow in the environment.
 
-This is an optional acceleration path. If the host already has a compatible PDF skill installed, use it directly. Do not make MiniMax PDF a hard requirement.
+This plugin now vendors the MiniMax PDF skill as a convenience layer. If the host already has a compatible PDF skill installed, that is still fine, but a separate MiniMax PDF install should no longer be required for PDF output after this plugin is installed.
 
 Do not use `which`, PATH checks, or shell executable discovery as the test for PDF capability. The host may expose PDF handling as a routed skill without a shell binary named `minimax-pdf`.
 
@@ -31,6 +31,11 @@ The core rule is:
 - PDF is usually the packaging layer, not the authoring layer
 - create the source artifact first when possible
 - preserve readable layout after conversion
+
+Preferred routing order:
+
+1. `minimax-pdf` for design-sensitive, print-ready, or form-aware PDF output
+2. environment `pdf` fallback when the bundled path is not clearly available
 
 ## Workflow
 
@@ -62,6 +67,7 @@ Check:
 - tables are not clipped
 - slide exports are legible
 - fonts and symbols survived conversion
+- if the source is already polished and needs strong visual packaging, prefer the bundled `minimax-pdf` route
 - absence of a shell-level MiniMax executable is not itself a blocker
 
 ## Output standard

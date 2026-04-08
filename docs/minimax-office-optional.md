@@ -1,6 +1,9 @@
 # MiniMax Office Optional Companion
 
-This plugin now bundles MiniMax-derived Word and Excel skills, and can also work with compatible host office/document skills.
+This plugin now bundles MiniMax-derived Word, Excel, and PDF skills, and can also work with compatible host office/document skills.
+
+Those bundled skills are adapted from verified MiniMaxAI host installs, with
+thanks to MiniMaxAI for the original office-skill foundations.
 
 The office surface is now split between bundled and optional components.
 
@@ -12,10 +15,10 @@ Bundled in this plugin:
 
 - `minimax-docx`
 - `minimax-xlsx`
+- `minimax-pdf`
 
 Still optional / host-provided:
 
-- `minimax-pdf`
 - `pptx-generator`
 - `ppt-editing-skill`
 - `ppt-orchestra-skill`
@@ -37,7 +40,6 @@ The actual office execution surface may already exist on the host. If so, duplic
 
 Verified on `macmini`:
 
-- PDF: `minimax-pdf`
 - PPT stack:
   - `pptx-generator`
   - `ppt-editing-skill`
@@ -53,9 +55,9 @@ The plugin's office wrapper skills are:
 - `ppt-deliverable`
 - `pdf-deliverable`
 
-For Word and Excel, the plugin should prefer its bundled MiniMax-derived skills.
+For Word, Excel, and PDF, the plugin should prefer its bundled MiniMax-derived skills.
 
-For PPT and PDF, the plugin should prefer compatible host-provided skills when available.
+For PPT, the plugin should prefer compatible host-provided skills when available.
 
 If those skills are not present, they should fall back to the standard environment workflows (`docx`, `xlsx`, `pptx`, `pdf`) instead of failing hard.
 
@@ -68,7 +70,7 @@ For the public GitHub repository, the stable policy is:
 - keep the banker workflow wrappers in this plugin
 - vendor only the components whose redistribution posture is clear enough for a public repo
 - document the compatible MiniMax skills clearly
-- do not make PPT/PDF companion skills a required install step
+- do not make PPT companion skills a required install step
 
 This keeps the public plugin lean, easier to publish, and safer from license / provenance confusion.
 
@@ -81,12 +83,12 @@ If a user already has the relevant office skills installed:
 
 If a user does **not** have those office skills installed:
 
-- Word and Excel are already covered by this plugin install
-- PPT and PDF can still be added later via a compatible host office stack
+- Word, Excel, and PDF are already covered by this plugin install
+- PPT can still be added later via a compatible host office stack
 
 ## Suggested wording for users
 
 You can treat the remaining host office skills as optional accelerators.
 
 - Already installed on your host? Great, just use this plugin.
-- Not installed? Word and Excel still work through bundled MiniMax-derived skills; PPT and PDF may use standard fallback paths until a richer host stack is added.
+- Not installed? Word, Excel, and PDF still work through bundled MiniMax-derived skills; PPT may use standard fallback paths until a richer host stack is added.

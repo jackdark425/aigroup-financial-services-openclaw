@@ -1,7 +1,7 @@
 This repository contains modified and repackaged material derived from:
 
 - anthropics/financial-services-plugins
-- MiniMaxAI office skills: `minimax-docx` and `minimax-xlsx`
+- MiniMaxAI office skills: `minimax-docx`, `minimax-xlsx`, and `minimax-pdf`
 
 Source repository:
 - https://github.com/anthropics/financial-services-plugins
@@ -12,6 +12,10 @@ Bundled MiniMax-derived components included in this repository:
 
 - `skills/minimax-docx` — MIT License, copyright MiniMaxAI
 - `skills/minimax-xlsx` — MIT License as declared in the skill frontmatter, source copied from a verified MiniMaxAI host installation
+- `skills/minimax-pdf` — MIT License as declared in the skill frontmatter, source copied from a verified MiniMaxAI host installation
+
+With thanks to MiniMaxAI for the original office-skill implementations that
+informed the bundled Word, Excel, and PDF experience in this plugin.
 
 This repository adapts the upstream file-based Claude plugin structure into
 OpenClaw-oriented skill packs and compatibility tooling.

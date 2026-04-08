@@ -3,6 +3,9 @@ name: word-deliverable
 description: Turn financial-services outputs into a polished Word deliverable. Use when the user wants an IC memo, customer memo, internal note, diligence summary, or banker-ready .docx built from this plugin's analysis.
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # Word Deliverable
 
 Use this skill when the user wants a Word document as the final output surface for work produced by this plugin.

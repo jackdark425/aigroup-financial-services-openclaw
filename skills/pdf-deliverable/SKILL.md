@@ -3,6 +3,9 @@ name: pdf-deliverable
 description: Package financial-services outputs as a PDF deliverable. Use when the user wants a final review copy, printable memo, presentation export, or shareable PDF derived from Word, Excel, PPT, or markdown outputs.
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # PDF Deliverable
 
 Use this skill when the user wants the final output delivered as PDF.

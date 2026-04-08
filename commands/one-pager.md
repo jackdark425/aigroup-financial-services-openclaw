@@ -3,6 +3,9 @@ description: Create a one-page company strip profile using branded PPT template
 argument-hint: "[company name or ticker]"
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # One-Pager Strip Profile Command
 
 Create a professional one-page company strip profile for pitch books and deal materials.

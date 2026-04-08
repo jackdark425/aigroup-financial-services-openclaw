@@ -3,6 +3,9 @@ name: excel-deliverable
 description: Turn financial-services analysis into a polished Excel workbook. Use when the user wants a model, comps sheet, datapack workbook, tracker, or structured .xlsx output from this plugin.
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # Excel Deliverable
 
 Use this skill when the requested output should be a real Excel workbook.

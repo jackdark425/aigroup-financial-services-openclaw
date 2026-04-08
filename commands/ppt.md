@@ -3,6 +3,9 @@ description: Create or refresh a PowerPoint deliverable from financial-services 
 argument-hint: "[company, slide ask, or deck task]"
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # PPT Deliverable Command
 
 Create a `.pptx` slide or deck from this plugin's analysis outputs.

@@ -3,6 +3,9 @@ description: Create a banker-ready Word deliverable from financial-services outp
 argument-hint: "[memo topic, company, or source material]"
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # Word Deliverable Command
 
 Create a `.docx` deliverable from this plugin's financial-services work.

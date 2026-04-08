@@ -4,6 +4,9 @@ argument-hint: "[path to .pptx or .potx file]"
 allowed-tools: ["Read", "Write", "Bash", "Glob"]
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # PPT Template Creator Command
 
 Create a self-contained PPT template skill from a user-provided PowerPoint template.

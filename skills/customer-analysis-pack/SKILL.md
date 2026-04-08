@@ -3,6 +3,9 @@ name: customer-analysis-pack
 description: Turn a customer investigation or company-intelligence brief into a banker-ready analysis pack in Chinese. Use when the user wants customer analysis, an internal banking memo, a follow-on pack after investigation, or a structured bridge from lead discovery into financial-services deliverables.
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # 客户分析包
 
 把前序客户调查结果转成一版银行内部分析包。默认中文输出，强调“从信息收集走到客户分析”。

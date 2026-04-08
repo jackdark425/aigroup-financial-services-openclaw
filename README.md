@@ -2,6 +2,8 @@
 
 Financial modeling, analysis, and deliverables suite for OpenClaw.
 
+This repository is a community-built derivative of `anthropics/financial-services-plugins`, distributed under Apache 2.0 with retained attribution, NOTICE preservation, and prominent modification notices in adapted source files. It is not an official Anthropic plugin or Anthropic release.
+
 Install this as the financial workflow suite after `aigroup-lead-discovery-openclaw`. It is designed to be the second half of the AIGroup banker stack: lead-discovery gathers company intelligence, and this plugin turns that context into models, analysis, and deliverables.
 
 This plugin now ships skills and commands only by default, and expects data collection to come from AIGroup lead-intelligence plugins and MCP services.
@@ -42,6 +44,20 @@ Important: the MiniMax / office layer is now split:
 If a user already has compatible host skills installed, that is still fine. The plugin should simply prefer its bundled Word/Excel/PDF path and continue to use compatible host capabilities for PPT where available.
 
 This repository is a compatibility layer, not a claim of official Anthropic or OpenClaw endorsement.
+
+## Licensing And Attribution
+
+- Upstream financial plugin source comes from `anthropics/financial-services-plugins` under Apache License 2.0.
+- This repository retains Apache 2.0 licensing materials and NOTICE attribution for upstream-derived content.
+- Modified upstream-derived skill and command files in this repository carry prominent notices that they were adapted by AIGroup for OpenClaw compatibility and banker workflow packaging.
+- Anthropic and MiniMax names, marks, and branding are used only to describe origin and compatibility, not to imply endorsement.
+- Bundled MiniMax office components remain separately attributed under their stated MIT terms.
+
+See:
+
+- [LICENSE](LICENSE)
+- [NOTICE](NOTICE)
+- [docs/apache-2.0-compliance.md](docs/apache-2.0-compliance.md)
 
 It now also exposes a standalone root-level Claude bundle so the repository itself can be installed and published as a single OpenClaw plugin:
 

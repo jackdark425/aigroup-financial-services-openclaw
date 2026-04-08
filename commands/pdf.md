@@ -3,6 +3,9 @@ description: Package a financial-services output as a PDF
 argument-hint: "[source artifact or desired PDF output]"
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # PDF Deliverable Command
 
 Create a `.pdf` distribution copy from this plugin's outputs.

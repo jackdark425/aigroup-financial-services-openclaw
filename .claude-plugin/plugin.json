@@ -1,6 +1,6 @@
 {
   "name": "aigroup-financial-services-openclaw",
-  "description": "Financial modeling, analysis, and deliverables suite for OpenClaw; designed to pair with aigroup-lead-discovery-openclaw",
+  "description": "Community-built OpenClaw compatibility layer for financial modeling, analysis, and deliverables; designed to pair with aigroup-lead-discovery-openclaw",
   "version": "0.1.11",
   "skills": "skills",
   "commands": "commands",

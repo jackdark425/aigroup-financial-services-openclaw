@@ -3,6 +3,9 @@ description: Create or refresh an Excel workbook from financial-services outputs
 argument-hint: "[company, model type, or workbook task]"
 ---
 
+<!-- Derived from anthropics/financial-services-plugins under Apache-2.0. Modified by AIGroup for OpenClaw compatibility and banker workflow packaging. Not an official Anthropic release. -->
+
+
 # Excel Deliverable Command
 
 Create a real `.xlsx` output from this plugin's analysis and modeling skills.

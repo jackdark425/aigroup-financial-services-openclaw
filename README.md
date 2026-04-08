@@ -31,9 +31,9 @@ These wrapper skills route banker workflows into the plugin's bundled office cap
 - Word -> `minimax-docx` -> `aigroup-mdtoword-mcp__markdown_to_docx` -> standard `docx`
 - Excel -> `minimax-xlsx`
 - PDF -> `minimax-pdf` -> standard `pdf`
-- PPT -> `pptx-generator` + `ppt-editing-skill` + `ppt-orchestra-skill` + `slide-making-skill`
+- PPT -> unified `ppt-deliverable` entry -> host PPT skills when available (`pptx-generator`, `ppt-editing-skill`, `ppt-orchestra-skill`, `slide-making-skill`) -> standard `pptx` fallback
 
-For Word, Excel, and PDF, the bundled MiniMax-derived skills are now part of the install surface of this plugin. Word also treats `aigroup-mdtoword-mcp` as an explicit companion route for banker memo generation and markdown-to-Word packaging. PPT still falls back to host capabilities or standard `pptx` workflows when needed.
+For Word, Excel, and PDF, the bundled MiniMax-derived skills are now part of the install surface of this plugin. Word also treats `aigroup-mdtoword-mcp` as an explicit companion route for banker memo generation and markdown-to-Word packaging. PPT uses a unified `ppt-deliverable` entrypoint that prefers compatible host capabilities and otherwise falls back to standard `pptx` workflows.
 
 Important routing note: these wrappers should not use shell-level `which` checks, PATH probing, or same-name executable discovery as the test for host office capability. On some hosts, those capabilities exist as routed skills without matching shell binaries.
 
@@ -41,9 +41,9 @@ Important: the MiniMax / office layer is now split:
 
 - Word, Excel, and PDF MiniMax-derived skills are included in this plugin
 - Word output explicitly supports `aigroup-mdtoword-mcp` as a companion path, so environments without MiniMax-style host wiring still have a stable `.docx` route
-- PPT companion capabilities remain host-dependent / optional
+- PPT remains exposed through a unified `ppt-deliverable` entry, but the richer PPT engine stays host-dependent / optional
 
-If a user already has compatible host skills installed, that is still fine. The plugin should simply prefer its bundled Word/Excel/PDF path and continue to use compatible host capabilities for PPT where available.
+If a user already has compatible host skills installed, that is still fine. The plugin should simply prefer its bundled Word/Excel/PDF path and use `ppt-deliverable` as the single PPT front door, delegating to compatible host capabilities where available.
 
 This repository is a compatibility layer, not a claim of official Anthropic or OpenClaw endorsement.
 
@@ -189,7 +189,7 @@ Recommended chaining:
 2. package the output through `word-deliverable`, `excel-deliverable`, `ppt-deliverable`, or `pdf-deliverable`
 3. use PDF last when the goal is a stable distribution artifact
 
-This office surface is intentionally packaged as a banker-facing front door, with bundled Word/Excel/PDF support and optional host enhancement for PPT.
+This office surface is intentionally packaged as a banker-facing front door, with bundled Word/Excel/PDF support and a unified PPT front door that reuses host enhancement when available.
 
 - It is meant to make banker workflows easier to use.
 - It is not meant to force every user to preinstall MiniMax office skills just to get Word, Excel, or PDF output.

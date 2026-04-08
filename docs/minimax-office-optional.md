@@ -57,7 +57,7 @@ The plugin's office wrapper skills are:
 
 For Word, Excel, and PDF, the plugin should prefer its bundled MiniMax-derived skills.
 
-For PPT, the plugin should prefer compatible host-provided skills when available.
+For PPT, the plugin should expose one unified entrypoint, `ppt-deliverable`, and prefer compatible host-provided skills when available.
 
 If those skills are not present, they should fall back to the standard environment workflows (`docx`, `xlsx`, `pptx`, `pdf`) instead of failing hard.
 
@@ -84,11 +84,11 @@ If a user already has the relevant office skills installed:
 If a user does **not** have those office skills installed:
 
 - Word, Excel, and PDF are already covered by this plugin install
-- PPT can still be added later via a compatible host office stack
+- PPT should still be invoked through `ppt-deliverable`; richer generation/editing behavior can be added later via a compatible host office stack
 
 ## Suggested wording for users
 
 You can treat the remaining host office skills as optional accelerators.
 
-- Already installed on your host? Great, just use this plugin.
-- Not installed? Word, Excel, and PDF still work through bundled MiniMax-derived skills; PPT may use standard fallback paths until a richer host stack is added.
+- Already installed on your host? Great, just use `ppt-deliverable` and let it reuse those PPT skills.
+- Not installed? Word, Excel, and PDF still work through bundled MiniMax-derived skills; `ppt-deliverable` may use standard fallback paths until a richer host PPT stack is added.

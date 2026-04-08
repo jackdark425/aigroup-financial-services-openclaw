@@ -34,7 +34,13 @@ Prefer prior outputs from:
 - `dcf-model`
 - `lbo-model`
 
-Prefer the bundled `minimax-docx` skill included in this plugin, but do not use `which`, PATH checks, or executable-name probing to decide that. If the bundled skill is not clearly exposed, continue with the standard `docx` path.
+Preferred Word routing order:
+
+1. use the bundled `minimax-docx` skill included in this plugin for higher-fidelity `.docx` generation
+2. if the source is already markdown, structured notes, or table-heavy banker memo content, use `aigroup-mdtoword-mcp__markdown_to_docx`
+3. only if neither path is clearly available, continue with the standard `docx` path
+
+Do not use `which`, PATH checks, or executable-name probing to decide that.
 
 ### Step 4: Deliver
 

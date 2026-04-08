@@ -20,9 +20,11 @@ Prefer the bundled MiniMax-derived Word skill shipped inside this plugin:
 
 - `minimax-docx`
 
-If that bundled path is not available for any reason, fall back to the standard `docx` workflow already available in the environment.
+Prefer `aigroup-mdtoword-mcp__markdown_to_docx` as the next routing layer for standard banker memo generation, markdown-to-Word conversion, and table-preserving `.docx` packaging.
 
-This plugin now vendors the MiniMax DOCX skill as a convenience layer. If the host already has a compatible Word / DOCX skill installed, that is also fine, but a separate MiniMax install should no longer be required for Word output after this plugin is installed.
+If neither of those paths is available for any reason, fall back to the standard `docx` workflow already available in the environment.
+
+This plugin now vendors the MiniMax DOCX skill as a convenience layer and treats `aigroup-mdtoword-mcp` as a first-class companion path for Word output. If the host already has a compatible Word / DOCX skill installed, that is also fine, but a separate MiniMax install should no longer be required for Word output after this plugin is installed.
 
 Do not try to detect host skills by shelling out with `which`, PATH checks, or executable-name probes. These office capabilities may exist as host-routed skills even when no same-named binary is present in the shell.
 
@@ -33,6 +35,12 @@ The core rule is:
 - author the document as a real `.docx`
 - keep tables and headings structured
 - do not stop at markdown if the user explicitly asked for Word
+
+Preferred routing order:
+
+1. `minimax-docx` for higher-fidelity Word generation and template-sensitive deliverables
+2. `aigroup-mdtoword-mcp__markdown_to_docx` for stable banker memo and report packaging from markdown or structured content
+3. environment `docx` fallback only when neither of the above is clearly available
 
 ## Workflow
 
@@ -82,6 +90,7 @@ Requirements:
 - clean tables instead of pasted ASCII blocks
 - explicit source notes where numbers matter
 - banker-readable prose, not placeholder text
+- if the content is already in markdown or tabular form, strongly prefer `aigroup-mdtoword-mcp` over manual copy/paste into ad hoc Word flows
 - do not block on shell-based MiniMax detection if the host already routed you into this skill successfully
 
 ### Step 4: Keep the file lineage clean

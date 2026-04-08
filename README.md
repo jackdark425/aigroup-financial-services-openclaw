@@ -20,18 +20,19 @@ This plugin now also vendors two MiniMax-origin office skills directly under `sk
 
 These wrapper skills route banker workflows into the plugin's bundled office capabilities first. On `macmini`, the verified mapping is:
 
-- Word -> `minimax-docx`
+- Word -> `minimax-docx` -> `aigroup-mdtoword-mcp__markdown_to_docx` -> standard `docx`
 - Excel -> `minimax-xlsx`
 - PDF -> `minimax-pdf`
 - PPT -> `pptx-generator` + `ppt-editing-skill` + `ppt-orchestra-skill` + `slide-making-skill`
 
-For Word and Excel, the bundled MiniMax-derived skills are now part of the install surface of this plugin. PPT and PDF still fall back to host capabilities or standard `pptx` / `pdf` workflows when needed.
+For Word and Excel, the bundled MiniMax-derived skills are now part of the install surface of this plugin. Word also treats `aigroup-mdtoword-mcp` as an explicit companion route for banker memo generation and markdown-to-Word packaging. PPT and PDF still fall back to host capabilities or standard `pptx` / `pdf` workflows when needed.
 
 Important routing note: these wrappers should not use shell-level `which` checks, PATH probing, or same-name executable discovery as the test for host office capability. On some hosts, those capabilities exist as routed skills without matching shell binaries.
 
 Important: the MiniMax / office layer is now split:
 
 - Word and Excel MiniMax-derived skills are included in this plugin
+- Word output explicitly supports `aigroup-mdtoword-mcp` as a companion path, so environments without MiniMax-style host wiring still have a stable `.docx` route
 - PPT and PDF companion capabilities remain host-dependent / optional
 
 If a user already has compatible host skills installed, that is still fine. The plugin should simply prefer its bundled Word/Excel path and continue to use compatible host capabilities for PPT/PDF where available.
@@ -168,6 +169,7 @@ This office surface is intentionally packaged as a banker-facing front door, wit
 
 - It is meant to make banker workflows easier to use.
 - It is not meant to force every user to preinstall MiniMax office skills just to get Word or Excel output.
+- It also works cleanly with `aigroup-mdtoword-mcp` when the Word job starts from markdown, notes, or a banker memo draft.
 - Users who already have equivalent host skills can still use those alongside the bundled paths.
 
 See:
@@ -234,7 +236,7 @@ This keeps the first pass focused on banker-usable customer investigation and cu
 
 Published package:
 
-- `aigroup-financial-services-openclaw@0.1.7`
+- `aigroup-financial-services-openclaw@0.1.10`
 
 Recommended companion package:
 

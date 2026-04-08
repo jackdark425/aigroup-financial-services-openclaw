@@ -10,6 +10,8 @@ metadata:
     - Microsoft Open XML SDK documentation
 ---
 
+<!-- Derived from a verified MiniMaxAI host skill installation and redistributed under the stated MIT terms. Modified by AIGroup for OpenClaw packaging and banker workflow integration. Not an official MiniMax release. -->
+
 # MiniMax XLSX Skill
 
 Handle the request directly. Do NOT spawn sub-agents. Always write the output file the user requests.

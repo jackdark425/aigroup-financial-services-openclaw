@@ -2,6 +2,8 @@
 
 Financial modeling, analysis, and deliverables suite for OpenClaw.
 
+AIGroup 自研 + 其他大厂开源能力整合版，用于把企业客户调查、金融分析、建模和交付物生成整合成一套可发布、可运行的 OpenClaw banker workflow。
+
 This repository is a community-built derivative of `anthropics/financial-services-plugins`, distributed under Apache 2.0 with retained attribution, NOTICE preservation, and prominent modification notices in adapted source files. It is not an official Anthropic plugin or Anthropic release.
 
 Install this as the financial workflow suite after `aigroup-lead-discovery-openclaw`. It is designed to be the second half of the AIGroup banker stack: lead-discovery gathers company intelligence, and this plugin turns that context into models, analysis, and deliverables.
@@ -52,12 +54,14 @@ This repository is a compatibility layer, not a claim of official Anthropic or O
 - Modified upstream-derived skill and command files in this repository carry prominent notices that they were adapted by AIGroup for OpenClaw compatibility and banker workflow packaging.
 - Anthropic and MiniMax names, marks, and branding are used only to describe origin and compatibility, not to imply endorsement.
 - Bundled MiniMax office components remain separately attributed under their stated MIT terms.
+- Each vendored MiniMax skill directory also carries its own `ATTRIBUTION.md` for source and packaging context.
 
 See:
 
 - [LICENSE](LICENSE)
 - [NOTICE](NOTICE)
 - [docs/apache-2.0-compliance.md](docs/apache-2.0-compliance.md)
+- [docs/vendored-minimax-components.md](docs/vendored-minimax-components.md)
 
 It now also exposes a standalone root-level Claude bundle so the repository itself can be installed and published as a single OpenClaw plugin:
 

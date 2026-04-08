@@ -33,6 +33,7 @@ This repository also bundles MiniMax-derived office skills under their stated MI
 - `skills/minimax-pdf`
 
 Their attribution remains in [NOTICE](/Users/jackdark/kimi/ai/aigroup-financial-services-openclaw/NOTICE).
+Each vendored skill directory also includes an `ATTRIBUTION.md` file with source and packaging notes.
 
 ## Practical release checklist
 

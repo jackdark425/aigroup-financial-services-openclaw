@@ -18,6 +18,8 @@ metadata:
   category: document-generation
 ---
 
+<!-- Derived from a verified MiniMaxAI host skill installation and redistributed under the stated MIT terms. Modified by AIGroup for OpenClaw packaging and banker workflow integration. Not an official MiniMax release. -->
+
 # minimax-pdf
 
 Three tasks. One skill.

@@ -1,7 +1,7 @@
 {
   "name": "aigroup-financial-services-openclaw",
   "description": "AIGroup self-built plus major open-source capability integration for financial modeling, analysis, and deliverables on OpenClaw; designed to pair with aigroup-lead-discovery-openclaw",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "skills": "skills",
   "commands": "commands",
   "mcpServers": ".mcp.json"

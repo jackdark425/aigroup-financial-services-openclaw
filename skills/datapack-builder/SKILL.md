@@ -371,6 +371,46 @@ For every normalization:
 - Cross-check numbers across tabs for consistency
 - Flag any discrepancies for investigation
 
+**Step 2.6: Statistical Validation via aigroup-econ-mcp (Optional Enhancement)**
+
+After data extraction and normalization, use `aigroup-econ-mcp` tools to deepen data quality and surface insights before building the Excel workbook. All outputs should be documented in a "Data Validation" note within the Executive Summary tab.
+
+**Multicollinearity Check (when 5+ financial metrics are included):**
+- Tool: `model_diagnostic_tests` (VIF calculation + Jarque-Bera normality test)
+  - Input: key financial metrics table (revenue, EBITDA, margins, growth rates, etc.)
+  - Output: VIF scores per metric; JB normality test results
+  - Action: flag metrics with VIF > 5 as redundant; note non-normal distributions in assumptions section
+
+**Core Value Driver Identification (when 8+ metrics are available):**
+- Tool: `regularized_regression` (LASSO, λ selected by cross-validation)
+  - Y = EBITDA or Net Income; X = all other extracted metrics
+  - Output: non-zero LASSO coefficients = stable value drivers
+  - Action: highlight these drivers in the Executive Summary "Key Metrics" table; annotate weaker metrics as secondary
+
+**Peer Performance Decomposition (when peer group data is available):**
+- Tool: `decomposition_oaxaca_blinder`
+  - Input: target company vs. peer group financial metrics
+  - Output: endowment effect (structural advantage) vs. coefficient effect (operational advantage)
+  - Action: add a "Peer Decomposition" note to Tab 7 (Market Analysis): "Target outperforms peers in X due to structural advantage; underperforms in Y due to operational gap"
+
+**Revenue Trend Analysis (when 3+ years of history are available):**
+- Tool: `decomposition_time_series`
+  - Input: historical revenue series
+  - Output: trend + seasonal + residual components
+  - Action: use trend component to cross-check management's projected growth rate; flag if projection significantly exceeds historical trend
+
+**Bootstrap Confidence on Key Metrics (for IC materials):**
+- Tool: `inference_bootstrap`
+  - Input: EBITDA margin or revenue growth time series
+  - Output: 95% CI on the mean
+  - Action: add CI ranges to the Executive Summary financial snapshot table for credibility
+
+**Integration Rule:** Skip econ-mcp validation if:
+- Source data covers fewer than 3 years
+- Only 1-2 financial metrics are available
+- User explicitly asks for a fast/minimal data pack
+If econ-mcp is unavailable, continue to Phase 3 without interruption.
+
 ### Phase 3: Build Excel Workbook
 
 **CRITICAL: Use xlsx skill for all Excel file manipulation. Read xlsx skill documentation before proceeding.**

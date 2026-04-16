@@ -136,6 +136,43 @@ CapEx % of revenue: X%
 FCF margin: X%
 ```
 
+### Step 2b: Statistical Forecasting via aigroup-econ-mcp (Optional Enhancement)
+
+When 3+ years of historical financials are available and the user has not provided explicit forward assumptions, use `aigroup-econ-mcp` tools to generate data-driven forecasts before building manual projections. Always show the user diagnostic results and ask whether to adopt statistical forecasts or override with explicit assumptions.
+
+**Revenue Forecasting:**
+- Tool: `time_series_arima_model` (auto-selects p,d,q)
+  - Input: historical annual or quarterly revenue series
+  - Output: point forecast + 95% CI for projection period
+  - Action: present AIC/BIC diagnostics; use as Base Case seed if user agrees
+- Tool: `time_series_exponential_smoothing`
+  - Use when seasonality is present (quarterly data with clear cycles)
+  - Output: trend + seasonal components + forecast
+
+**Structural Change Detection:**
+- Tool: `structural_break_tests` (Chow test)
+  - Run on revenue and margin time series before projecting
+  - If break detected: split model into pre/post-break periods; apply different growth rates
+  - Action: note break point in cell comment with date and business context
+
+**Volatility & Risk (WACC refinement):**
+- Tool: `time_series_garch_model`
+  - Input: historical FCF or earnings residuals
+  - Output: conditional variance estimate
+  - Action: use output to stress-test equity risk premium in WACC (increase ERP if volatility is high)
+
+**Confidence Intervals on DCF Output:**
+- Tool: `inference_bootstrap`
+  - Input: the key assumption vectors (growth rates, WACC, terminal g)
+  - Output: 95% CI on implied share price
+  - Action: add a "Statistical Confidence Band" row to the sensitivity summary showing the bootstrap range
+
+**Integration Rule:** Only invoke econ-mcp tools when:
+1. ≥3 years historical data is available
+2. User has not pre-specified all growth and margin assumptions
+3. Results are presented to the user with p-values / model fit diagnostics before being adopted
+4. If econ-mcp is unavailable, fall back to the manual methodology in Step 3 below without interruption
+
 ### Step 3: Build Revenue Projections
 
 **Methodology:**
@@ -1249,6 +1286,7 @@ This approach centralizes scenario logic, making the model easier to audit and m
 ### Available Data Sources
 
 - **MCP servers**: If configured (Daloopa for historical financials)
+- **aigroup-econ-mcp**: Statistical forecasting and diagnostics (see Step 2b)
 - **Web search/fetch**: For current stock prices, beta, and market data
 - **User-provided data**: Historical financials, consensus estimates
 - **Manual extraction**: SEC EDGAR filings as fallback

@@ -36,6 +36,10 @@ Prefer:
 - `process-letter`
 - `customer-analysis-pack`
 
+If the source is already markdown or a markdown-like analysis draft, route through:
+
+- `aigroup-mdtopptx-mcp__markdown_to_pptx`
+
 Use the host's PPT stack when available:
 
 - `pptx-generator`
@@ -43,7 +47,7 @@ Use the host's PPT stack when available:
 - `ppt-orchestra-skill`
 - `slide-making-skill`
 
-Do not try to prove PPT availability with `which`, PATH checks, or binary-name probing. Treat these as host skills first, then fall back to the standard `pptx` workflow if they are not exposed.
+Do not try to prove PPT availability with `which`, PATH checks, or binary-name probing. Treat `aigroup-mdtopptx-mcp` and host PPT skills as routed capabilities first, then fall back to the standard `pptx` workflow if they are not exposed.
 
 ### Step 4: Deliver
 

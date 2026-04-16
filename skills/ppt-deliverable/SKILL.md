@@ -20,7 +20,11 @@ Use this skill when the final output should be a PowerPoint artifact.
 
 ## Tooling preference
 
-Prefer the host's actual PPT stack when available. On `macmini`, that means:
+Prefer the embedded markdown-first PPT path when the source material is already in markdown, structured analysis notes, or a model-written banker memo:
+
+- `aigroup-mdtopptx-mcp__markdown_to_pptx`
+
+Then prefer the host's actual PPT stack when available. On `macmini`, that means:
 
 - `pptx-generator` for create/read flows
 - `ppt-editing-skill` for editing existing decks safely
@@ -28,6 +32,8 @@ Prefer the host's actual PPT stack when available. On `macmini`, that means:
 - `slide-making-skill` for single-slide implementation details
 
 If that PPT stack is not exposed on the host, fall back to the standard `pptx` workflow already available in the environment.
+
+This plugin now ships an embedded `aigroup-mdtopptx-mcp` stdio server for the stable case where the model has already produced markdown and now needs a real, editable `.pptx` with banker-style layout.
 
 This is an optional acceleration path. If the host already has compatible PPT skills installed, use them. Do not require separate MiniMax setup just to produce slides.
 
@@ -38,6 +44,13 @@ The core rule is:
 - ship a real `.pptx`
 - preserve template structure when one exists
 - keep slides concise and presentation-native
+- prefer editable text/table/chart objects over flattened screenshots
+
+Preferred routing order:
+
+1. `aigroup-mdtopptx-mcp__markdown_to_pptx` for markdown-first banker deck generation
+2. host PPT skills such as `pptx-generator`, `ppt-editing-skill`, `ppt-orchestra-skill`, and `slide-making-skill`
+3. environment `pptx` fallback only when neither of the above is clearly available
 
 ## Workflow
 
@@ -63,6 +76,8 @@ Prefer these building blocks:
 
 If the user already has source tables in Excel or text in Word/markdown, consume those as inputs rather than recreating the analysis.
 
+If the source is already markdown or markdown-like analysis output, strongly prefer `aigroup-mdtopptx-mcp`.
+
 ### Step 3: Build the deck
 
 Requirements:
@@ -71,6 +86,7 @@ Requirements:
 - keep numbers synced with underlying models
 - match the provided template or established banker style
 - use tables/charts where they communicate better than prose
+- keep the output editable in PowerPoint / Keynote
 - do not stop just because no same-named PPT executable exists in the shell
 
 ### Step 4: Review before delivery
@@ -95,6 +111,7 @@ Deliver:
 ## Quality checklist
 
 - final artifact is a real `.pptx`
+- the final artifact remains editable rather than being flattened into image-only slides
 - slides are presentation-ready, not document pages pasted into PowerPoint
 - formatting is consistent with the source template or banker style
 - charts/tables reflect current numbers

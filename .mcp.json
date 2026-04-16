@@ -1,3 +1,42 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "aigroup-mdtopptx-mcp": {
+      "command": "node",
+      "args": [
+        "./scripts/mdtopptx/server.mjs"
+      ],
+      "alwaysAllow": [
+        "markdown_to_pptx"
+      ]
+    },
+    "aigroup-econ-mcp": {
+      "command": "uvx",
+      "args": [
+        "aigroup-econ-mcp"
+      ],
+      "alwaysAllow": [
+        "basic_parametric_estimation_ols",
+        "time_series_arima_model",
+        "time_series_exponential_smoothing",
+        "time_series_garch_model",
+        "time_series_unit_root_tests",
+        "structural_break_tests",
+        "causal_difference_in_differences",
+        "causal_event_study",
+        "ml_random_forest",
+        "ml_gradient_boosting",
+        "ml_kmeans_clustering",
+        "ml_causal_forest",
+        "nonparametric_kernel_regression",
+        "nonparametric_quantile_regression",
+        "decomposition_oaxaca_blinder",
+        "decomposition_time_series",
+        "model_diagnostic_tests",
+        "model_selection_criteria",
+        "regularized_regression",
+        "inference_bootstrap",
+        "inference_permutation_test"
+      ]
+    }
+  }
 }

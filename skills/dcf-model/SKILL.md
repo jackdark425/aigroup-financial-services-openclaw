@@ -173,6 +173,43 @@ When 3+ years of historical financials are available and the user has not provid
 3. Results are presented to the user with p-values / model fit diagnostics before being adopted
 4. If econ-mcp is unavailable, fall back to the manual methodology in Step 3 below without interruption
 
+### Step 2c: Expanded Econometric Toolkit (econ-mcp 2.0.10+)
+
+`aigroup-econ-mcp@2.0.10` exposes 66 tools across 11 groups. The additions below unlock capabilities that were previously impossible inside the DCF skill. Invoke them only when the underlying data and scenario warrant the method, and surface p-values / fit statistics to the user before adopting.
+
+**Long-run equilibrium and cross-variable dynamics:**
+- `time_series_cointegration_analysis` (Engle-Granger / Johansen) — detect whether revenue, CapEx, and working capital share a long-run equilibrium. If cointegrated, the terminal-value assumption should pin all three to the same trend rate rather than project them independently.
+- `time_series_var_svar_model` — when multiple endogenous series drive each other (e.g., revenue ↔ marketing spend ↔ gross margin). Use SVAR impulse responses to justify margin expansion paths.
+- `time_varying_parameter_models` — regime-dependent growth (pre-COVID vs post-COVID, pre-IPO vs public) where a single ARIMA is insufficient.
+
+**Robust point estimation (alternatives / complements to ARIMA):**
+- `basic_parametric_estimation_gmm` — when orthogonality conditions matter (no full distributional assumption).
+- `basic_parametric_estimation_mle` — for models with explicit distribution (survival curves for installed base, Weibull growth).
+
+**Panel / industry-relative forecasting:**
+- `panel_data_diagnostics` + `panel_data_dynamic_model` — if the target is modeled against an industry panel, test for fixed effects and persistence.
+- `panel_var_model` — sector-wide revenue / margin / capex co-movement to contextualize the target's trajectory.
+
+**Treatment-effect reasoning in the projection period:**
+- `ml_double_machine_learning` — quantify the causal FCF impact of a strategic action (new product launch, acquisition, repricing) with high-dimensional confounders.
+- `causal_synthetic_control` / `causal_difference_in_differences` (existing) — construct counterfactual FCF if the company had *not* executed a disclosed initiative; used to decide whether historical growth should be extrapolated or truncated.
+- `causal_regression_discontinuity` — when guidance regime changes at a clean threshold (segment size, regulatory cut-off).
+
+**WACC and beta refinement:**
+- `time_series_garch_model` (existing) — keep as baseline for volatility.
+- `ml_neural_network` / `ml_support_vector_machine` — non-linear beta regimes for high-growth / option-like equity (use cautiously; report RMSE and overfit diagnostics).
+- `robust_errors_regression` — HC-robust standard errors on the CAPM regression; widen equity risk premium if heteroskedasticity is severe.
+
+**Missing data in the historical base:**
+- `missing_data_multiple_imputation` — run before time-series methods if any year has gaps (acquisitions, fiscal realignments, restatements). Document imputation in a cell comment on each imputed cell.
+
+**Microeconometrics for unit economics layered into the DCF:**
+- `micro_heckman` — when LTV / ARPU is only observed on retained customers (selection bias).
+- `micro_tobit` — censored metrics (e.g., regulatory-capped pricing, contract minimums).
+- `micro_poisson` / `micro_negative_binomial` — count-based drivers (stores opened, deals closed).
+
+**Documentation discipline:** every new tool invocation adds a row to the DCF "Model Provenance" note (near the Executive Summary) capturing tool name, econ-mcp version, input series, key statistic, and whether the result was adopted into an assumption or used as advisory only.
+
 ### Step 3: Build Revenue Projections
 
 **Methodology:**
@@ -1286,7 +1323,7 @@ This approach centralizes scenario logic, making the model easier to audit and m
 ### Available Data Sources
 
 - **MCP servers**: If configured (Daloopa for historical financials)
-- **aigroup-econ-mcp**: Statistical forecasting and diagnostics (see Step 2b)
+- **aigroup-econ-mcp** (v2.0.10+, 66 tools): Statistical forecasting, diagnostics, panel / causal / spatial / microecon methods (see Step 2b for the forecasting core and Step 2c for the expanded 2.0.10 toolkit)
 - **Web search/fetch**: For current stock prices, beta, and market data
 - **User-provided data**: Historical financials, consensus estimates
 - **Manual extraction**: SEC EDGAR filings as fallback

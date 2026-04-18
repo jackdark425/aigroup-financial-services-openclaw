@@ -411,6 +411,39 @@ After data extraction and normalization, use `aigroup-econ-mcp` tools to deepen 
 - User explicitly asks for a fast/minimal data pack
 If econ-mcp is unavailable, continue to Phase 3 without interruption.
 
+**Step 2.7: Expanded Validation (econ-mcp 2.0.10+)**
+
+Starting with `aigroup-econ-mcp@2.0.10`, the server exposes 66 tools across 11 groups. Treat the following new capabilities as *diagnostic enhancements* — invoke them only when the underlying data shape supports the method, and always surface the p-value / goodness-of-fit before adopting results into the deliverable.
+
+**Missing data (before any other stats run):**
+- `missing_data_simple_imputation` / `missing_data_multiple_imputation` — run first if any metric has gaps ≥5%. Note imputation method and assumption in the Data Validation section; disclose imputed rows in cell comments.
+
+**Robust inference when residuals misbehave:**
+- `robust_errors_regression` — use instead of plain OLS when model_diagnostic_tests flags heteroskedasticity. Report HC3 standard errors in the Executive Summary footnote.
+- `generalized_least_squares` / `weighted_least_squares` — for data with known variance structure (e.g., segments with heterogeneous sample sizes).
+
+**Panel / multi-segment datapacks:**
+- `panel_data_diagnostics` — Hausman test for fixed vs random effects when the target has ≥3 segments × ≥3 years.
+- `panel_data_dynamic_model` — Arellano-Bond style estimation for persistence of key ratios (margin, working capital).
+- `panel_var_model` — joint dynamics of revenue / EBITDA / capex across entities.
+
+**Selection bias / endogeneity in unit economics:**
+- `micro_heckman` — for customer / deal / cohort data where inclusion itself is endogenous (e.g., LTV only observed on retained customers).
+- `micro_logit` / `micro_probit` / `micro_multinomial_logit` / `micro_negative_binomial` / `micro_poisson` / `micro_tobit` — for discrete or censored operational KPIs (churn, upsell count, truncated revenue buckets).
+- `causal_instrumental_variables` / `causal_control_function` — when the driver and outcome share unobserved confounders (price and volume, marketing and revenue).
+
+**Spatial / geographic businesses (retail, real estate, logistics, multi-region services):**
+- `spatial_weights_matrix` + `spatial_morans_i_test` / `spatial_gearys_c_test` / `spatial_local_moran_lisa` — detect geographic clustering of revenue / margin before writing Market Analysis.
+- `spatial_regression_model` / `spatial_gwr_model` — quantify spatial spillover vs pure location effect.
+
+**Simultaneous / system estimation:**
+- `simultaneous_equations_model` — when two endogenous metrics feed each other (e.g., price ↔ volume, R&D ↔ revenue growth).
+
+**Variance decomposition and system diagnostics:**
+- `decomposition_variance_anova` — partition metric variance into segment / year / interaction sources for investment committee narrative.
+
+**Reporting discipline:** each new tool invocation must be recorded in the Executive Summary "Data Validation" note with (a) tool name + econ-mcp version, (b) key p-value or fit statistic, (c) business interpretation in one sentence, (d) whether the result was adopted or treated as advisory.
+
 ### Phase 3: Build Excel Workbook
 
 **CRITICAL: Use xlsx skill for all Excel file manipulation. Read xlsx skill documentation before proceeding.**

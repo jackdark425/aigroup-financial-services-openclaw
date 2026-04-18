@@ -20,22 +20,16 @@ Use this skill when the final output should be a PowerPoint artifact.
 
 ## Tooling preference
 
-Prefer the embedded markdown-first PPT path when the source material is already in markdown, structured analysis notes, or a model-written banker memo:
-
-- `aigroup-mdtopptx-mcp__markdown_to_pptx`
-
-Then prefer the host's actual PPT stack when available. On `macmini`, that means:
+Route PPT generation through the host's MiniMax PPT stack. On `macmini`, that means:
 
 - `pptx-generator` for create/read flows
-- `ppt-editing-skill` for editing existing decks safely
-- `ppt-orchestra-skill` for multi-slide planning
 - `slide-making-skill` for single-slide implementation details
+- `ppt-orchestra-skill` for multi-slide planning
+- `ppt-editing-skill` for editing existing decks safely
 
 If that PPT stack is not exposed on the host, fall back to the standard `pptx` workflow already available in the environment.
 
-This plugin now ships an embedded `aigroup-mdtopptx-mcp` stdio server for the stable case where the model has already produced markdown and now needs a real, editable `.pptx` with banker-style layout.
-
-This is an optional acceleration path. If the host already has compatible PPT skills installed, use them. Do not require separate MiniMax setup just to produce slides.
+> **Note on removed path (0.1.17)** — versions 0.1.13 through 0.1.16 shipped an embedded `aigroup-mdtopptx-mcp` stdio server that converted markdown to `.pptx` via `pptxgenjs` with a banker template derived from the NVIDIA sample. In practice the MiniMax host PPT skill suite produces noticeably better banker decks, so 0.1.17 removed the embedded server to let routing converge on a single good path. Archive of the `scripts/mdtopptx/` directory is retained in the repository for reference but is no longer registered in `.mcp.json`.
 
 Do not treat shell discovery as the source of truth. Avoid `which`, PATH checks, or binary-name probes for PPT routing because these capabilities may exist only as host skills.
 
@@ -48,9 +42,8 @@ The core rule is:
 
 Preferred routing order:
 
-1. `aigroup-mdtopptx-mcp__markdown_to_pptx` for markdown-first banker deck generation
-2. host PPT skills such as `pptx-generator`, `ppt-editing-skill`, `ppt-orchestra-skill`, and `slide-making-skill`
-3. environment `pptx` fallback only when neither of the above is clearly available
+1. host MiniMax PPT skills — `pptx-generator`, `slide-making-skill`, `ppt-orchestra-skill`, `ppt-editing-skill`
+2. environment `pptx` fallback when the MiniMax stack is not exposed
 
 ## Workflow
 
@@ -76,7 +69,7 @@ Prefer these building blocks:
 
 If the user already has source tables in Excel or text in Word/markdown, consume those as inputs rather than recreating the analysis.
 
-If the source is already markdown or markdown-like analysis output, strongly prefer `aigroup-mdtopptx-mcp`.
+If the source is already markdown or markdown-like analysis output, feed it to the host's MiniMax PPT skills (`pptx-generator` / `slide-making-skill`) rather than trying to script the conversion manually — MiniMax preserves banker-style layout far better than a hand-rolled pptxgenjs pipeline.
 
 ### Step 3: Build the deck
 

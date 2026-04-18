@@ -31,9 +31,9 @@ These wrapper skills route banker workflows into the plugin's bundled office cap
 - Word -> `minimax-docx` -> `aigroup-mdtoword-mcp__markdown_to_docx` -> standard `docx`
 - Excel -> `minimax-xlsx`
 - PDF -> `minimax-pdf` -> standard `pdf`
-- PPT -> `aigroup-mdtopptx-mcp__markdown_to_pptx` for markdown-first deck generation -> unified `ppt-deliverable` entry -> host PPT skills when available (`pptx-generator`, `ppt-editing-skill`, `ppt-orchestra-skill`, `slide-making-skill`) -> standard `pptx` fallback
+- PPT -> unified `ppt-deliverable` entry -> host PPT skills (`pptx-generator`, `slide-making-skill`, `ppt-orchestra-skill`, `ppt-editing-skill`) -> standard `pptx` fallback
 
-For Word, Excel, and PDF, the bundled MiniMax-derived skills are now part of the install surface of this plugin. Word also treats `aigroup-mdtoword-mcp` as an explicit companion route for banker memo generation and markdown-to-Word packaging. PPT now treats `aigroup-mdtopptx-mcp` as an explicit companion route for markdown-to-PowerPoint packaging, and `ppt-deliverable` remains the unified front door for broader PPT workflows.
+For Word, Excel, and PDF, the bundled MiniMax-derived skills are now part of the install surface of this plugin. Word also treats `aigroup-mdtoword-mcp` as an explicit companion route for banker memo generation and markdown-to-Word packaging. PPT routing is handled through the unified `ppt-deliverable` front door, which delegates to host MiniMax PPT skills (`pptx-generator`, `slide-making-skill`, `ppt-orchestra-skill`, `ppt-editing-skill`) for the actual deck generation. Starting with 0.1.17, this plugin no longer ships its own `aigroup-mdtopptx-mcp` server — earlier versions experimented with an embedded pptxgenjs route but the host MiniMax PPT skill suite produces significantly better banker decks, so the plugin now defers to it.
 
 Important routing note: these wrappers should not use shell-level `which` checks, PATH probing, or same-name executable discovery as the test for host office capability. On some hosts, those capabilities exist as routed skills without matching shell binaries.
 
@@ -41,7 +41,7 @@ Important: the MiniMax / office layer is now split:
 
 - Word, Excel, and PDF MiniMax-derived skills are included in this plugin
 - Word output explicitly supports `aigroup-mdtoword-mcp` as a companion path, so environments without MiniMax-style host wiring still have a stable `.docx` route
-- PPT now includes an embedded `aigroup-mdtopptx-mcp` path for stable markdown-first `.pptx` generation, while `ppt-deliverable` still exposes the unified PPT front door for host-enhanced flows
+- PPT delegates entirely to host MiniMax PPT skills via the unified `ppt-deliverable` front door (0.1.17 removed the embedded `aigroup-mdtopptx-mcp` pptxgenjs route)
 
 If a user already has compatible host skills installed, that is still fine. The plugin should simply prefer its bundled Word/Excel/PDF path and use `ppt-deliverable` as the single PPT front door, delegating to compatible host capabilities where available.
 
@@ -158,7 +158,7 @@ This repository currently treats Anthropic financial plugins as:
 
 - `skills/` -> OpenClaw workspace skills
 - `commands/` -> operator playbooks / future command adapters
-- `.mcp.json` -> local stdio MCP wiring, including the embedded `aigroup-mdtopptx-mcp` server
+- `.mcp.json` -> local stdio MCP wiring (only `aigroup-econ-mcp` since 0.1.17; earlier 0.1.13–0.1.16 also registered `aigroup-mdtopptx-mcp`)
 - `.mcp.optional-upstream.json` -> preserved reference template for the original 11 upstream HTTP connectors
 - `.claude-plugin/plugin.json` -> source metadata only
 
@@ -194,7 +194,7 @@ This office surface is intentionally packaged as a banker-facing front door, wit
 - It is meant to make banker workflows easier to use.
 - It is not meant to force every user to preinstall MiniMax office skills just to get Word, Excel, or PDF output.
 - It also works cleanly with `aigroup-mdtoword-mcp` when the Word job starts from markdown, notes, or a banker memo draft.
-- It now also works cleanly with `aigroup-mdtopptx-mcp` when the PPT job starts from markdown, structured analysis, or a banker memo that should become editable slides.
+- PPT jobs that start from markdown, structured analysis, or a banker memo go through the unified `ppt-deliverable` front door and land on host MiniMax PPT skills, which produce editable banker-quality decks.
 - Users who already have equivalent host skills can still use those alongside the bundled paths.
 
 See:
@@ -207,7 +207,7 @@ The repository root now provides a standalone bundle with:
 
 - merged `skills/`
 - merged `commands/`
-- `.mcp.json` with the embedded local `aigroup-mdtopptx-mcp` server
+- `.mcp.json` wiring `aigroup-econ-mcp` as the embedded local stdio MCP
 - optional `.mcp.optional-upstream.json` for operators who explicitly want the original upstream connector references
 - `.claude-plugin/plugin.json` manifest
 

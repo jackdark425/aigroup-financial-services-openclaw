@@ -1,14 +1,5 @@
 {
   "mcpServers": {
-    "aigroup-mdtopptx-mcp": {
-      "command": "node",
-      "args": [
-        "./scripts/mdtopptx/server.mjs"
-      ],
-      "alwaysAllow": [
-        "markdown_to_pptx"
-      ]
-    },
     "aigroup-econ-mcp": {
       "command": "uvx",
       "args": [

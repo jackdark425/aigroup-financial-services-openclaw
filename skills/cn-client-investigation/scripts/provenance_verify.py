@@ -74,26 +74,33 @@ def extract_provenance_corpus(prov_text: str) -> str:
     return re.sub(r"\s+", " ", cleaned)
 
 
-def normalize_variants(num: str, unit: str) -> list[str]:
+def normalize_variants(num: str, unit: str) -> tuple[list[str], list[str]]:
     """
-    Return candidate strings to search for in the provenance corpus.
+    Return (unit_attached_variants, bare_number_variants).
+
+    Unit-attached variants are the strong signal and always checked.
+    Bare-number variants are a fallback only used when the unit token also
+    appears somewhere in the provenance corpus — they're noisier so the
+    verifier applies them last.
+
     Covers:
       - exact "15.2 亿RMB"
       - without space "15.2亿RMB"
-      - number alone (caller will AND with unit-nearby check)
       - common comma-thousands variation (strip commas)
-      - cross-unit equivalences (亿元 ↔ 万元 ↔ 元) so a markdown claim of
-        "1476.94 亿元" matches a provenance row citing "14,769,400 万元"
-        (banker reports routinely mix 万元/亿元 scales between analysis text
-        and the underlying Tushare / CNINFO disclosure tables).
+      - cross-unit equivalences (亿元 ↔ 万元 ↔ 元 ↔ 亿 ↔ 万) so a markdown
+        claim of "1476.94 亿元" matches a provenance row citing
+        "14,769,400 万元" (banker reports routinely mix 万元/亿元 scales
+        between analysis text and underlying Tushare / CNINFO tables).
     """
-    variants: set[str] = set()
+    unit_attached: set[str] = set()
+    bare: set[str] = set()
+
     base = num
     no_commas = num.replace(",", "")
     for n in {base, no_commas}:
-        variants.add(f"{n}{unit}")
-        variants.add(f"{n} {unit}")
-        variants.add(n)  # last resort: number alone
+        unit_attached.add(f"{n}{unit}")
+        unit_attached.add(f"{n} {unit}")
+        bare.add(n)
 
     # Unit equivalences — convert numeric value into companion-unit form and
     # add those as search candidates. Only kicks in for units that have a
@@ -101,7 +108,7 @@ def normalize_variants(num: str, unit: str) -> list[str]:
     try:
         value = float(no_commas)
     except ValueError:
-        return list(variants)
+        return list(unit_attached), list(bare)
 
     equivalents: list[tuple[float, str]] = []
     if unit == "亿元":
@@ -118,26 +125,27 @@ def normalize_variants(num: str, unit: str) -> list[str]:
         equivalents = [(value / 10000, "亿"), (value * 10000, "")]
 
     for v, u in equivalents:
-        # Skip silly precision or near-zero conversions
         if v <= 0:
             continue
-        # Whole-number form and one-decimal form — banker tables write both
-        # "14769360" and "14,769,360" in manually prepared provenance tables.
-        whole = f"{int(v)}" if v == int(v) else f"{v:g}"
-        variants.add(f"{whole}{u}")
-        variants.add(f"{whole} {u}")
-        # With thousands separators
-        try:
-            if v == int(v):
-                variants.add(f"{int(v):,}{u}")
-                variants.add(f"{int(v):,} {u}")
-        except (OverflowError, ValueError):
-            pass
-        # Add decimal form too for beauty: 14769360 ↔ 1476.94 亿元
-        if "." in whole or v != int(v):
-            variants.add(f"{v:.2f}{u}")
-            variants.add(f"{v:.2f} {u}")
-    return list(variants)
+        is_whole = v == int(v)
+        # Integer form + comma-thousands form + decimal form. Banker
+        # provenance tables encode the same number in several textual
+        # variants, so we emit all of them.
+        whole_int = int(v) if is_whole else None
+        if is_whole:
+            unit_attached.add(f"{whole_int}{u}")
+            unit_attached.add(f"{whole_int} {u}")
+            try:
+                unit_attached.add(f"{whole_int:,}{u}")
+                unit_attached.add(f"{whole_int:,} {u}")
+            except (OverflowError, ValueError):
+                pass
+        else:
+            unit_attached.add(f"{v:g}{u}")
+            unit_attached.add(f"{v:g} {u}")
+            unit_attached.add(f"{v:.2f}{u}")
+            unit_attached.add(f"{v:.2f} {u}")
+    return list(unit_attached), list(bare)
 
 
 def verify(
@@ -155,15 +163,17 @@ def verify(
     covered_count = 0
 
     for lineno, num, unit, snippet in hits:
-        variants = normalize_variants(num, unit)
+        unit_variants, bare_variants = normalize_variants(num, unit)
         unit_ok = unit in corpus
-        num_ok = any(v in corpus for v in variants[:4])  # exclude bare-number variant
+        # Primary check: any unit-attached variant present anywhere in corpus.
+        num_ok = any(v in corpus for v in unit_variants)
         if num_ok:
             covered_count += 1
             continue
-        # Fallback: if number alone appears AND the unit also appears somewhere
-        # in the provenance corpus, count as a soft match (still covered).
-        if unit_ok and num.replace(",", "") in corpus:
+        # Fallback: bare number appears AND matching unit token also appears
+        # (not necessarily adjacent) — soft match, useful when the provenance
+        # table encodes number and unit in separate table cells.
+        if unit_ok and any(v in corpus for v in bare_variants):
             covered_count += 1
             continue
         missing.append(

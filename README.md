@@ -1,8 +1,31 @@
 # aigroup-financial-services-openclaw
 
-Financial modeling, analysis, and deliverables suite for OpenClaw.
+Financial modeling, analysis, and deliverables suite for OpenClaw. **Stable track (0.2.0+).**
 
 AIGroup 自研 + 其他大厂开源能力整合版，用于把企业客户调查、金融分析、建模和交付物生成整合成一套可发布、可运行的 OpenClaw banker workflow。
+
+## Stable vs Lab（0.2.0 开始分两条轨）
+
+从 0.2.0 起，这个包是 **稳定版 (stable track)**，只包含经充分验证的 skills / commands / office 交付层，**不再内置任何实验性 MCP server**。
+
+| 能力 | 稳定版 (本仓库) | 探索版 (`aigroup-financial-services-openclaw-lab`，私仓) |
+|------|----------------|------------------------------------------------------|
+| Skills（customer-analysis-pack / datapack-builder / dcf-model / pitch-deck / etc.） | ✅ | ✅ |
+| Office 交付层（word/excel/pdf via bundled MiniMax skills + `aigroup-mdtoword-mcp` companion） | ✅ | ✅ |
+| PPT 路由（unified `ppt-deliverable` → host MiniMax PPT skills） | ✅ | ✅ |
+| `aigroup-econ-mcp`（66 个计量经济学工具，PyPI 2.0.10） | ❌ **未启用** | ✅ opt-in |
+| `aigroup-mdtopptx-mcp`（嵌入式 pptxgenjs banker 模板） | ❌ **未启用** | ✅ opt-in |
+| `.mcp.json` 注册的 MCP server 数 | 0（纯 skills 包） | 2 |
+
+**选择建议**：只要 host 上装了 MiniMax 家 office skills 和标准 MCP（FMP / Finnhub / Market / Tushare），稳定版就能端到端跑完 banker workflow。**需要 econ-mcp 计量工具或 pptxgenjs 嵌入式 PPT 模板的场景才去装探索版**。
+
+## 0.2.0 变更要点
+
+- `.mcp.json`: `mcpServers` 清空 — 本包不再注册任何 MCP server
+- `scripts/mdtopptx/`: 目录整体移除（搬到探索版私仓）
+- `package.json`: 删除 `@modelcontextprotocol/sdk` / `pptxgenjs` / `marked` / `zod` 依赖（稳定版不再需要 Node 运行时 MCP server）
+- `skills/dcf-model/SKILL.md` 和 `skills/datapack-builder/SKILL.md`: econ-mcp 相关段落前加 "stable plugin note"，明确声明需要 lab 包
+
 
 This repository is a community-built derivative of `anthropics/financial-services-plugins`, distributed under Apache 2.0 with retained attribution, NOTICE preservation, and prominent modification notices in adapted source files. It is not an official Anthropic plugin or Anthropic release.
 

@@ -136,7 +136,9 @@ CapEx % of revenue: X%
 FCF margin: X%
 ```
 
-### Step 2b: Statistical Forecasting via aigroup-econ-mcp (Optional Enhancement)
+### Step 2b: Statistical Forecasting via aigroup-econ-mcp (Optional — requires `aigroup-financial-services-openclaw-lab`)
+
+> **Stable plugin note**: `aigroup-econ-mcp` is NOT bundled in the stable `aigroup-financial-services-openclaw` plugin (0.2.0+). If the tool is not visible in the agent's tool list, skip Step 2b and Step 2c entirely, and proceed to Step 3 using the manual projection methodology. To enable these econometric enhancements, install the experimental `aigroup-financial-services-openclaw-lab` bundle separately (contains `aigroup-econ-mcp` + `aigroup-mdtopptx-mcp`).
 
 When 3+ years of historical financials are available and the user has not provided explicit forward assumptions, use `aigroup-econ-mcp` tools to generate data-driven forecasts before building manual projections. Always show the user diagnostic results and ask whether to adopt statistical forecasts or override with explicit assumptions.
 

@@ -371,7 +371,9 @@ For every normalization:
 - Cross-check numbers across tabs for consistency
 - Flag any discrepancies for investigation
 
-**Step 2.6: Statistical Validation via aigroup-econ-mcp (Optional Enhancement)**
+**Step 2.6: Statistical Validation via aigroup-econ-mcp (Optional — requires `aigroup-financial-services-openclaw-lab`)**
+
+> **Stable plugin note**: `aigroup-econ-mcp` is NOT bundled in the stable `aigroup-financial-services-openclaw` plugin (0.2.0+). If the tool is not visible in the agent's tool list, skip this step and Step 2.7 entirely and continue to Phase 3. To enable these econometric validations, install the experimental `aigroup-financial-services-openclaw-lab` bundle separately (contains `aigroup-econ-mcp` + `aigroup-mdtopptx-mcp`). See the lab repo README for install instructions.
 
 After data extraction and normalization, use `aigroup-econ-mcp` tools to deepen data quality and surface insights before building the Excel workbook. All outputs should be documented in a "Data Validation" note within the Executive Summary tab.
 

@@ -42,7 +42,9 @@ from typing import Iterable
 # A digit run (with optional decimal) followed (possibly after one space)
 # by one of the banker units below.
 UNITS = r"(?:亿元|亿|万|%|元|RMB|USD|CNY|HKD|M|B)"
-NUM_CORE = r"\d{1,3}(?:,\d{3})*(?:\.\d+)?"
+# Allow any digit run (no 3-cap) so "1500亿元" captures as 1500, not 500.
+# Thousands separators are still handled by the optional `(?:,\d{3})*` group.
+NUM_CORE = r"\d+(?:,\d{3})*(?:\.\d+)?"
 HARD_NUMBER = re.compile(rf"({NUM_CORE})\s*({UNITS})")
 
 

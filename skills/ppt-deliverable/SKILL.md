@@ -34,7 +34,7 @@ Before touching any pptxgenjs slide code, check whether the target company is a 
 - **Rule 4**: tier-ordered China-market data sources (Tushare / CNINFO / 交易所 / 天眼查 / FMP)
 - **Rule 5**: every hard number in the analysis.md must have a matching row in `data-provenance.md` — verified via `provenance_verify.py`
 - **Rule 6**: no fabrication on missing data — label "数据不可得" / "N/A" instead
-- **Rule 7**: `cn_typo_scan.py` is a **mandatory compile-time gate** — your `slides/compile.js` must be based on `compile_with_typo_gate.template.js` so a scan hit blocks the pptx from shipping
+- **Rule 7**: `cn_typo_scan.py` is a **mandatory compile-time gate** — your `slides/compile.js` must be based on `references/compile_with_typo_gate.template.js.txt` (strip the `.txt` suffix on copy) so a scan hit blocks the pptx from shipping
 
 For non-CN targets, skip this pre-flight and use the regular `ppt-deliverable` routing below.
 

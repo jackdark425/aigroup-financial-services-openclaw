@@ -58,8 +58,10 @@ function findTypoScanner() {
 }
 
 function extractPptxText(pptxPath) {
-  // Prefer python-pptx text extraction (fast, deterministic). Fall back to
-  // markitdown if python-pptx is unavailable.
+  // python-pptx text extraction (fast, deterministic). If python-pptx is
+  // missing, the spawned process exits 2 and the caller aborts — we
+  // intentionally do not fall back to markitdown: the scanner needs the raw
+  // paragraph text structure that python-pptx preserves.
   const script = `
 import sys
 try:

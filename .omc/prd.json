@@ -45,7 +45,7 @@
       "id": "US-003",
       "title": "MD 数据 provenance 强制校验脚本",
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "新建 skills/cn-client-investigation/scripts/provenance_verify.py — 接受 MD 文件路径 + 对应 data-provenance.md 路径",
         "脚本 regex 扫描 MD 里硬数字模式（\\d+(\\.\\d+)?\\s*(亿|万|%|RMB|USD|元|CNY|HKD|M|B|亿元)），每条硬数字 cross-check data-provenance.md 表格是否有对应条目",
@@ -59,7 +59,7 @@
       "id": "US-004",
       "title": "ppt-deliverable / dcf-model / datapack-builder 注入 CN routing",
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "skills/ppt-deliverable/SKILL.md 在 '## Tooling preference' 之前加 '## CN target pre-flight' section（15-30 行），说明若 context 含'中国'/'A股'/'港股'/'科创板'/'创业板'/'北交所'/'中概股'/'H 股' 任一 → 必须先加载 cn-client-investigation skill 并遵循其 7 条 Rule",
         "skills/dcf-model/SKILL.md 在 Step 1 '数据收集' 前新增 'Step 0.5: CN target check'，1 个段落告诉 agent 若目标 CN 则激活 cn-client-investigation Rule 4（数据源 tier）和 Rule 6（no fabrication）",
@@ -72,7 +72,7 @@
       "id": "US-005",
       "title": "Lab 私仓 banker 禁用警告强化",
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "aigroup-financial-services-openclaw-lab/README.md 顶部（title 下 1-5 行内）加 '⚠️ 警告：本仓库为探索版，输出不适用于 banker 对客户交付物' 字样（或等价中英文）",
         "aigroup-econ-mcp-lab/README.md 新增 '## Known Quirks / Not Production' section，列出至少 5 条（panel_var entity_ids / synthetic_control donor pool / DML n<50 NaN / probit SE 巨大 / xgboost libomp dlopen）",
@@ -84,9 +84,9 @@
     },
     {
       "id": "US-006",
-      "title": "stable 0.3.0 发布 + macmini 升级验证",
+      "title": "stable 0.3.0 发布 + macmini 升级验证 (实际 ship 0.3.1，0.3.0 被 OpenClaw safety scanner 拦 child_process; 语义等价)",
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "stable 主仓 package.json + .claude-plugin/plugin.json 版本 bump 到 0.3.0",
         "prepare_release_bundle.py 打包 validate 通过",

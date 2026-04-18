@@ -32,7 +32,7 @@ RED_FLAG_DYADS = [
     ("贜", "rare character 贜; in banker prose almost always a typo"),
     # Market case (核心 / 加速 → 校虚 observed)
     ("校虚", "likely meant 核心 or 加速 (market adj)"),
-    # Catalyst case (催化 → 催化济 observed when the context is catalysts not planning)
+    # Catalyst case (催化剂 → 催化济 observed — last char shifted)
     ("催化济", "probably intended 催化剂 — last char shifted"),
     # --- 2nd batch: also observed in the same 2026-04-18 Cambricon deck ---
     # 转化 → 转映 observed ("转换成本转映软件")

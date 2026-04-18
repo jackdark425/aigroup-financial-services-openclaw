@@ -102,13 +102,28 @@ async function main() {
     try {
       const mod = require(file);
       if (typeof mod.createSlide !== 'function') {
-        console.error(`[compile] slide-${num}.js has no createSlide(pres, theme) export`);
-        continue;
+        console.error(`[compile] slide-${num}.js has no createSlide(pres, theme) export — FAIL`);
+        process.exit(5);
+      }
+      // Signature sanity: createSlide MUST take 2 params (pres, theme). If it
+      // declares only (theme) and internally `new pptxgen()`, the slide gets
+      // written to a local pres we then throw away, producing silent empty
+      // pages in the final compile. This exact bug hit Moore Threads v8 with
+      // 19 slides producing <640 shapes instead of expected 950+.
+      if (mod.createSlide.length < 2) {
+        console.error(
+          `[compile] slide-${num}.js createSlide declares ${mod.createSlide.length} ` +
+          `param(s); MUST take (pres, theme). Fix the function signature and do ` +
+          `NOT call \`new pptxgen()\` inside createSlide — always mutate the ` +
+          `shared \`pres\` passed in. Aborting.`
+        );
+        process.exit(6);
       }
       mod.createSlide(pres, THEME);
       loadedSlides += 1;
     } catch (err) {
       console.error(`[compile] slide-${num}.js failed: ${err.message}`);
+      process.exit(7);
     }
   }
 

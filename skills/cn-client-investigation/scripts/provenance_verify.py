@@ -82,14 +82,61 @@ def normalize_variants(num: str, unit: str) -> list[str]:
       - without space "15.2亿RMB"
       - number alone (caller will AND with unit-nearby check)
       - common comma-thousands variation (strip commas)
+      - cross-unit equivalences (亿元 ↔ 万元 ↔ 元) so a markdown claim of
+        "1476.94 亿元" matches a provenance row citing "14,769,400 万元"
+        (banker reports routinely mix 万元/亿元 scales between analysis text
+        and the underlying Tushare / CNINFO disclosure tables).
     """
-    variants = set()
+    variants: set[str] = set()
     base = num
     no_commas = num.replace(",", "")
     for n in {base, no_commas}:
         variants.add(f"{n}{unit}")
         variants.add(f"{n} {unit}")
         variants.add(n)  # last resort: number alone
+
+    # Unit equivalences — convert numeric value into companion-unit form and
+    # add those as search candidates. Only kicks in for units that have a
+    # well-defined scalar multiple.
+    try:
+        value = float(no_commas)
+    except ValueError:
+        return list(variants)
+
+    equivalents: list[tuple[float, str]] = []
+    if unit == "亿元":
+        # 1亿元 = 10000 万元 = 1e8 元
+        equivalents = [(value * 10000, "万元"), (value * 1e8, "元")]
+    elif unit == "万元":
+        # 1万元 = 0.0001 亿元 = 10000 元
+        equivalents = [(value / 10000, "亿元"), (value * 10000, "元")]
+    elif unit == "元":
+        equivalents = [(value / 1e8, "亿元"), (value / 10000, "万元")]
+    elif unit == "亿":
+        equivalents = [(value * 10000, "万"), (value * 1e8, "")]
+    elif unit == "万":
+        equivalents = [(value / 10000, "亿"), (value * 10000, "")]
+
+    for v, u in equivalents:
+        # Skip silly precision or near-zero conversions
+        if v <= 0:
+            continue
+        # Whole-number form and one-decimal form — banker tables write both
+        # "14769360" and "14,769,360" in manually prepared provenance tables.
+        whole = f"{int(v)}" if v == int(v) else f"{v:g}"
+        variants.add(f"{whole}{u}")
+        variants.add(f"{whole} {u}")
+        # With thousands separators
+        try:
+            if v == int(v):
+                variants.add(f"{int(v):,}{u}")
+                variants.add(f"{int(v):,} {u}")
+        except (OverflowError, ValueError):
+            pass
+        # Add decimal form too for beauty: 14769360 ↔ 1476.94 亿元
+        if "." in whole or v != int(v):
+            variants.add(f"{v:.2f}{u}")
+            variants.add(f"{v:.2f} {u}")
     return list(variants)
 
 

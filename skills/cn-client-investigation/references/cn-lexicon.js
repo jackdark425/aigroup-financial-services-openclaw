@@ -312,6 +312,53 @@ const LEXICON = {
       private_cloud: '私有云',
       hybrid_deployment: '混合部署',
     },
+    // 消费品 / 品牌消费龙头（白酒 / 调味品 / 乳品 / 家电 / 化妆品 / 服饰）
+    consumer_brand: {
+      // 白酒
+      kweichow_moutai: '贵州茅台',
+      wuliangye: '五粮液',
+      luzhou_laojiao: '泸州老窖',
+      yanghe: '洋河股份',
+      shede: '舍得酒业',
+      fenjiu: '山西汾酒',
+      gujing: '古井贡酒',
+      high_end_baijiu: '高端白酒',
+      baijiu_premium: '超高端白酒',
+      baijiu_mid_range: '次高端白酒',
+      daqu: '大曲',
+      sauce_aroma: '酱香型',
+      strong_aroma: '浓香型',
+      light_aroma: '清香型',
+      aging: '年份酒',
+      volume_volume: '吨位',
+      price_band: '价格带',
+      // 调味品 / 乳品 / 食品
+      haitian_flavor: '海天味业',
+      yili: '伊利股份',
+      mengniu: '蒙牛乳业',
+      nongfu_spring: '农夫山泉',
+      yuanqi_forest: '元气森林',
+      // 家电 / 白电
+      midea: '美的集团',
+      gree: '格力电器',
+      haier: '海尔智家',
+      // 服饰 / 化妆品 / 免税
+      anta: '安踏体育',
+      li_ning: '李宁',
+      chn_duty_free: '中国中免',
+      proya: '珀莱雅',
+      // 消费通用
+      ex_factory_price: '出厂价',
+      suggested_retail: '指导价',
+      channel_inventory: '渠道库存',
+      distributor: '经销商',
+      direct_sales: '直营',
+      dealer_network: '经销商网络',
+      brand_moat: '品牌护城河',
+      premium_positioning: '高端定位',
+      consumer_upgrade: '消费升级',
+    },
+
     // 消费电子 / 硬件
     consumer_hw: {
       wearable: '可穿戴设备',

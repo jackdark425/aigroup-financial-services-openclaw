@@ -70,9 +70,29 @@ def scan(text: str) -> list[tuple[int, str, str]]:
             # e.g. "2024年" is hanzi-after-digit, not digit-after-hanzi. the
             # pattern only fires hanzi→digit, which is the suspicious direction.
             ctx = line[max(0, m.start() - 5):m.end() + 5]
-            # whitelist: Chinese sequence + number + unit (e.g. 金额 15亿)
-            # skip if the hanzi is a measure/count word
-            if m.group(0)[0] in "第共计":
+            # Whitelist chars that are legitimately followed by a digit in
+            # banker prose. Every character here should be evaluated as
+            # "would a 2024-era banker deck ever write this char + a digit
+            # literally, without it being an escape-drift typo?" Keep this
+            # list conservative and add to it only when a real deliverable
+            # produces a clear false-positive.
+            #
+            # Groups:
+            #   measure / count    : 第共计超约近多 (S 第1，共100，约200)
+            #   line-item leads    : 营收净利股价市值毛利净利率 (营收 200 亿)
+            #   ticker / sector    : 白酒消费科技金融家电食品医药
+            #   well-known names   : 茅台五粮泸州洋河海天伊利美的格力比亚迪宁德蔚来 LVMH
+            #   financial qualifiers: 高中低端 / 同比环比 / 首半全三四
+            WHITELIST_LEADS = (
+                "第共计超约近多"
+                "营收净利股价市值毛利率润流"
+                "白酒消费科技金融家电食品医药奢"
+                "茅台五粮泸州洋河海天伊利美的格力"
+                "窖红额于指居金应在间售"
+                "高中低同环比首半全三四两"
+                "LVMH"
+            )
+            if m.group(0)[0] in WHITELIST_LEADS:
                 continue
             hits.append((lineno, ctx.strip()[:120], f"hanzi-then-digit '{m.group(0)}' — escape drift suspect"))
         for m in RE_RARE_CJK.finditer(line):

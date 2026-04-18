@@ -68,9 +68,19 @@ slide.addText("寒武纪科技深度分析", { fontSize: 26, fontFace: "Microsof
 | T3 — 第三方数据 | Wind / 同花顺 / 东方财富 / FMP / Finnhub（港股/中概股） | `aigroup-fmp-mcp`, `aigroup-finnhub-mcp` |
 | T4 — 公开报道 | 财新 / 21世纪 / 中新社 / 澎湃 / 财联社 | `brave-web-search`, `web_fetch` |
 
-### Rule 5 — Cross-check every hard number (data accuracy)
+### Rule 5 — Cross-check every hard number + provenance gate (data accuracy, MANDATORY)
 
 Every financial number in the deliverable (营业收入 / 净利润 / 毛利率 / 市值 / 股价 / 融资金额) must be verified by at least **2 independent sources from the tier table above**, OR clearly flagged as "single-source estimate" with the source cited in a page footer caption. If 2 sources diverge by > 5%, report both and pick the more recent; add a footnote.
+
+**Mandatory Phase 5 QA gate** — every deliverable must pass `provenance_verify.py` before being considered shippable. The script scans the analysis markdown for hard numbers (`digit + 亿/万/%/RMB/USD/元/CNY/HKD/M/B`) and confirms every one of them has a matching row in the companion `data-provenance.md` tracking table. Missing provenance → exit 1 → block delivery.
+
+```bash
+python3 skills/cn-client-investigation/scripts/provenance_verify.py \
+    deliverable/analysis.md \
+    deliverable/data-provenance.md
+```
+
+Every banker deliverable MUST include a `data-provenance.md` file at the deliverable root. Use the template under `references/data-sources.md` as the starting shape. Fill in one row per hard number with: 指标 / 数值 / 单位 / 期间 / Tier / 源 / URL 或工具 / 取数时间 / 交叉验证状态.
 
 ### Rule 6 — No fabrication on missing data (data accuracy)
 
@@ -82,22 +92,42 @@ If a needed data point cannot be fetched (MCP returns error, web blocked, docume
 
 Historical `micro_probit` / `panel_var_model` style illustrative data is NOT appropriate for China banker deliverables — those tools belong to the lab bundle and produce demonstration output only.
 
-### Rule 7 — Self-verify deck text before delivery (typo detection)
+### Rule 7 — Self-verify deck text before delivery (typo detection, MANDATORY GATE)
 
-Before declaring the deck done, run:
+**Typo detection is NOT an optional step — it is a compile-time gate. A pptx that has not passed `cn_typo_scan.py` is NOT a shippable deliverable.**
 
-```bash
-python -m markitdown path/to/deck.pptx > /tmp/deck.txt
-python3 scripts/cn_typo_scan.py /tmp/deck.txt  # from this skill
+The canonical way to enforce this is to base `slides/compile.js` on the provided template:
+
+```
+scripts/compile_with_typo_gate.template.js
 ```
 
-The `cn_typo_scan.py` helper greps for these red-flag patterns (all indicators of `\uXXXX` encoding corruption observed in 2026-04-18 runs):
+Copy it to the deliverable's `slides/compile.js`, adjust `SLIDE_COUNT` / `OUTPUT_PATH` / `THEME` at the top, then `cd slides && node compile.js`. The template:
 
-- Rare character dyads that shouldn't appear in banker prose: 宽厭 / 谛79 / 洁利 / 贜 / 校虚 / 筹划（作动词）
-- Chinese chars immediately followed by digits (often fallback when `\uXXXX` escape is malformed): `[一-龥][0-9]`
-- Obvious lexicon mismatches: 公司名 appearing without the pre-defined lexicon literal
+1. Standard pptxgenjs compile loop (require slide-01.js … slide-NN.js, call `createSlide(pres, theme)`, `writeFile`)
+2. Spawn `python3` with the skill's [`cn_typo_scan.py`](scripts/cn_typo_scan.py) against the newly-written pptx's extracted text
+3. If scan exit is non-zero, node `process.exit(1)` — the pptx is NOT considered delivered until the offending `slide-NN.js` files are fixed and the compile is re-run
 
-Fix any hits by editing the offending `slide-NN.js` file and recompiling.
+If you cannot use the template verbatim (e.g. custom compile pipeline), you MUST still run the equivalent gate after every `writeFile`:
+
+```bash
+python3 -c "from pptx import Presentation; p = Presentation('deck.pptx'); [print(para.text) for s in p.slides for sh in s.shapes if sh.has_text_frame for para in sh.text_frame.paragraphs if para.text.strip()]" > /tmp/deck.txt
+python3 skills/cn-client-investigation/scripts/cn_typo_scan.py /tmp/deck.txt  # exit 0 = ship, exit 1 = abort
+```
+
+`cn_typo_scan.py` greps for these red-flag patterns (all observed in 2026-04-18 runs or confirmed on the broader `\uXXXX` token-drift pattern space):
+
+- Rare character dyads that shouldn't appear in banker prose: 宽厭 / 谛数字 / 洁利 / 贜 / 校虚 / 催化济 / 棒品 / 转映 / 艺瑞 / 调诚
+- Chinese chars immediately followed by digits (classic escape truncation symptom): `[一-龥][0-9]`
+- CJK Extension A / B / C / D characters (U+3400-U+4DBF, U+20000+) — almost always corruption in banker prose
+
+On scan hit:
+1. Read the stderr report — each line gives L<n>, reason, and context snippet
+2. Identify the source `slide-NN.js` file containing the offending text
+3. Replace the broken Unicode string with the UTF-8 literal fix (preferably via `LEXICON.red_zone.<key>` lookup from [`references/cn-lexicon.js`](references/cn-lexicon.js) — Rule 2)
+4. Re-run `node slides/compile.js` — the gate will rescan
+
+Do NOT ship a pptx that has bypassed the gate. Do NOT `--no-typo-scan` your way out of failures.
 
 ## Workflow
 

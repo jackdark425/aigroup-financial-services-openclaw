@@ -20,6 +20,7 @@ import pathlib
 # strongly suggest a `\\uXXXX` escape went wrong. Extend this list as new typo
 # patterns are encountered.
 RED_FLAG_DYADS = [
+    # --- initial batch (observed 2026-04-18 Cambricon v9 deck) ---
     # Cambricon case (寒武纪 → 宽厭谛79 observed)
     ("宽厭", "likely meant 寒武 (Cambricon)"),
     ("谛79", "likely meant 纪 (third char of 寒武纪)"),
@@ -31,9 +32,17 @@ RED_FLAG_DYADS = [
     ("贜", "rare character 贜; in banker prose almost always a typo"),
     # Market case (核心 / 加速 → 校虚 observed)
     ("校虚", "likely meant 核心 or 加速 (market adj)"),
-    # Catalyst case (催化 → 筹划 observed when the context is catalysts not planning)
-    # Note: 筹划 is a real word (to plan) — only flag if context suggests catalyst-list
+    # Catalyst case (催化 → 催化济 observed when the context is catalysts not planning)
     ("催化济", "probably intended 催化剂 — last char shifted"),
+    # --- 2nd batch: also observed in the same 2026-04-18 Cambricon deck ---
+    # 转化 → 转映 observed ("转换成本转映软件")
+    ("转映", "likely meant 转化 (conversion)"),
+    # 艾瑞 / 艾媒 → 艺瑞 observed ("艺瑞咨询 2024")
+    ("艺瑞", "likely meant 艾瑞 or 艾媒 (market research firm)"),
+    # 产品 → 棒品 observed ("AI校虚国产化棒品")
+    ("棒品", "likely meant 产品"),
+    # 调试 → 调诚 observed ("需6-12个月调诚Loop")
+    ("调诚", "likely meant 调试 (debug/tuning)"),
 ]
 
 # Generic patterns that signal broken escape sequences

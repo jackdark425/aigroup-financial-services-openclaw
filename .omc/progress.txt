@@ -1,0 +1,35 @@
+finplugin-quality-hardening-20260418 — 进度日志
+
+## 第 1 iteration start (2026-04-18 18:32)
+
+### 现状基线
+- stable 0.2.1 已发布 + 装到 macmini + main agent 能看到 cn-client-investigation skill
+- 此 skill 已含 SKILL.md + references/cn-lexicon.js + references/data-sources.md + scripts/cn_typo_scan.py
+- 寒武纪 v9 deck (cambricon_deep_analysis.pptx) 留作 smoke 样本 — cn_typo_scan 实测捕获 44 条 hit
+- private lab repo `aigroup-financial-services-openclaw-lab` 含 2 sub-bundle（econ-mcp-lab + mdtopptx-mcp-lab），各自 README 描述 quirks
+
+### Iteration 1 目标 story
+US-001: compile-time typo gate 模板 + scan self-smoke
+US-002: lexicon 150+ 条 + red_zone + RED_FLAG_DYADS 加到 10+
+US-003: provenance_verify.py 脚本
+US-004: 3 个 SKILL.md 注入 CN routing
+US-005: lab README 强化警告
+US-006: 0.3.0 发布 + macmini 升级
+
+### 已知 pattern / 学到的
+- MiniMax-M2.7 的 Chinese \\uXXXX escape typo 规律：
+  * 相邻 code point 混位（寒 U+5BD2 → 宽 U+5BBD）
+  * 字符级 dropout 再补 digit（纪 U+7EAA → 谛 U+8C1B + "79"）
+  * 偏旁错字（净 → 洁 / 财 → 贜 / 亏 → 贜）
+  * 语义邻近替换（核心 → 校虚 / 催化剂 → 筹划）
+- UTF-8 literal 原字存源码是最稳的 (cn-lexicon.js 路径已证)
+- cn_typo_scan RED_FLAG_DYADS 当前 ~12 条，HANZI_THEN_DIGIT regex 泛化抓 drift，效果验证 OK
+- ClawHub bundle-plugin publish 流程已跑通，publish 后 macmini 偶发 "missing plugin.json" transient，清 /var/folders cache 重装 OK
+
+### 进度条
+- [ ] US-001 compile-time typo gate
+- [ ] US-002 lexicon 扩容 + RED_FLAG_DYADS 扩容
+- [ ] US-003 provenance_verify.py
+- [ ] US-004 3 个 SKILL.md CN routing 注入
+- [ ] US-005 lab README 警告强化
+- [ ] US-006 0.3.0 发布 + 升级

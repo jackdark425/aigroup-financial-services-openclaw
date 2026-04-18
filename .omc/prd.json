@@ -1,0 +1,102 @@
+{
+  "prd_id": "finplugin-quality-hardening-20260418",
+  "title": "AIGroup 金融插件质量硬化 — MD 数据准确 + PPT 文字正确",
+  "goal": "确保 macmini OpenClaw main agent 通过 aigroup-financial-services-openclaw (stable) + aigroup-financial-services-openclaw-lab (private) 生成的 MD 底稿数据可溯源、PPT 成品无中文字符错位（寒武纪→宽厭谛79 / 核心→校虚 / 净利→洁利 等 MiniMax-M2.7 已观测 typo 模式）。",
+  "context": {
+    "observed_issues_20260418": [
+      "寒武纪 Cambricon v9 deck 出现 44 条 cn_typo_scan 红旗 hit（宽厭谛79 / 校虚 / 洁利贜务贜损 / 筹划 / 转映 / 艺瑞 / 棒品 等）",
+      "MD 底稿里硬数字（营收/估值/市值）部分没有 data-provenance 条目，无法 tracing",
+      "agent 在 T1 数据源（Tushare/CNINFO）失败时偶发 fabricate 数据而非标 N/A",
+      "现 ppt-deliverable / datapack-builder / dcf-model SKILL 没有引用 cn-client-investigation skill，CN 目标时 routing 不会自动激活"
+    ],
+    "stable_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw (public, @0.2.1)",
+    "lab_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw-lab (private)",
+    "deploy_target": "macmini via ClawHub bundle-plugin"
+  },
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "cn_typo_scan 从 optional 升级为 compile-time 强制 gate",
+      "priority": 1,
+      "passes": true,
+      "acceptanceCriteria": [
+        "新建文件 skills/cn-client-investigation/scripts/compile_with_typo_gate.template.js — 可复制到 slides/compile.js 的 pptxgenjs compile 模板，生成 pptx 后自动 spawn `python-pptx 抽文本 + cn_typo_scan.py`，scan 返回非 0 时 node 进程 process.exit(1) 并打印 typo 列表到 stderr",
+        "cn-client-investigation/SKILL.md Rule 7 段落更新：明确指令 agent 用这个模板作为 compile.js 的基础，不许跳过 typo gate",
+        "cn_typo_scan.py 对一条人造坏文本（内含'宽厭谛79'）返回 exit 1 且 stderr 含具体 line + reason",
+        "cn_typo_scan.py 对一条人造干净文本（纯投行常用中文）返回 exit 0"
+      ],
+      "verification_method": "bash: 跑 scan script 两次分别用 bad/good 输入、check exit code + stderr"
+    },
+    {
+      "id": "US-002",
+      "title": "cn-lexicon.js 覆盖率翻倍 + red-zone 锁字表",
+      "priority": 2,
+      "passes": true,
+      "acceptanceCriteria": [
+        "cn-lexicon.js 总条目 >= 150（当前 ~80）",
+        "新增 LEXICON.red_zone 对象，key 为已观测 typo 词（宽厭/谛79/校虚/洁利/贜务/贜损/筹划/转映/艺瑞/棒品），value 为正确版本字面字符串（UTF-8 literal）",
+        "新增 LEXICON.industry_terms 涵盖 AI 芯片 / 半导体 / 新能源车 / 创新药 / SaaS 五个常见 banker 行业的核心术语，每个 >= 15 条",
+        "node 加载 lexicon 验证 module.exports 是 plain object 且 top-level key >= 6",
+        "cn_typo_scan.py 的 RED_FLAG_DYADS 列表 >= 10 条，其中至少 3 条是新加的（不在 20260418 初版中）"
+      ],
+      "verification_method": "node -e require + wc + grep + scan 再跑一次 Cambricon deck，hits 数 >= 44（覆盖不倒退）"
+    },
+    {
+      "id": "US-003",
+      "title": "MD 数据 provenance 强制校验脚本",
+      "priority": 3,
+      "passes": false,
+      "acceptanceCriteria": [
+        "新建 skills/cn-client-investigation/scripts/provenance_verify.py — 接受 MD 文件路径 + 对应 data-provenance.md 路径",
+        "脚本 regex 扫描 MD 里硬数字模式（\\d+(\\.\\d+)?\\s*(亿|万|%|RMB|USD|元|CNY|HKD|M|B|亿元)），每条硬数字 cross-check data-provenance.md 表格是否有对应条目",
+        "对一条人造 MD (含 3 个硬数字 + 2 条 provenance 表条目) 返回 exit 1 并报告 1 条缺失",
+        "对一条人造全对齐 MD（硬数字全有 provenance 条目）返回 exit 0",
+        "cn-client-investigation/SKILL.md Rule 5 更新：明确指令 Phase 5 QA 步骤必须跑 provenance_verify.py，不通过不算交付完成"
+      ],
+      "verification_method": "跑两次脚本，check exit code + stderr 报告"
+    },
+    {
+      "id": "US-004",
+      "title": "ppt-deliverable / dcf-model / datapack-builder 注入 CN routing",
+      "priority": 4,
+      "passes": false,
+      "acceptanceCriteria": [
+        "skills/ppt-deliverable/SKILL.md 在 '## Tooling preference' 之前加 '## CN target pre-flight' section（15-30 行），说明若 context 含'中国'/'A股'/'港股'/'科创板'/'创业板'/'北交所'/'中概股'/'H 股' 任一 → 必须先加载 cn-client-investigation skill 并遵循其 7 条 Rule",
+        "skills/dcf-model/SKILL.md 在 Step 1 '数据收集' 前新增 'Step 0.5: CN target check'，1 个段落告诉 agent 若目标 CN 则激活 cn-client-investigation Rule 4（数据源 tier）和 Rule 6（no fabrication）",
+        "skills/datapack-builder/SKILL.md 在 Phase 1 '文档处理' 之前同样新增 'Phase 0.5: CN target check' 段落",
+        "grep 'cn-client-investigation' 在这 3 个 SKILL.md 文件至少各出现 1 次"
+      ],
+      "verification_method": "grep count + 人工读段落判断语义完整"
+    },
+    {
+      "id": "US-005",
+      "title": "Lab 私仓 banker 禁用警告强化",
+      "priority": 5,
+      "passes": false,
+      "acceptanceCriteria": [
+        "aigroup-financial-services-openclaw-lab/README.md 顶部（title 下 1-5 行内）加 '⚠️ 警告：本仓库为探索版，输出不适用于 banker 对客户交付物' 字样（或等价中英文）",
+        "aigroup-econ-mcp-lab/README.md 新增 '## Known Quirks / Not Production' section，列出至少 5 条（panel_var entity_ids / synthetic_control donor pool / DML n<50 NaN / probit SE 巨大 / xgboost libomp dlopen）",
+        "aigroup-mdtopptx-mcp-lab/README.md 同样新增至少 5 条 quirks（下划线吞失 / 长 section 硬切 / 空 title 边界 / CJK 字符错位在 markdown parser / node_modules 需本地 install）",
+        "两个仓库 sub-README 各有 workaround 段落（至少 2 个 bullet per sub-bundle）",
+        "lab repo 新 commit + push 到 jackdark425/aigroup-financial-services-openclaw-lab private"
+      ],
+      "verification_method": "grep 警告字样 + wc 段落 + git log 确认 push"
+    },
+    {
+      "id": "US-006",
+      "title": "stable 0.3.0 发布 + macmini 升级验证",
+      "priority": 6,
+      "passes": false,
+      "acceptanceCriteria": [
+        "stable 主仓 package.json + .claude-plugin/plugin.json 版本 bump 到 0.3.0",
+        "prepare_release_bundle.py 打包 validate 通过",
+        "git commit + push main 成功（HEAD 有 v0.3.0 标签或 commit msg 含 'v0.3.0'）",
+        "clawhub package publish --family bundle-plugin --version 0.3.0 成功",
+        "macmini uninstall + install 0.3.0 完成，~/.openclaw/extensions/aigroup-financial-services-openclaw/.claude-plugin/plugin.json version = 0.3.0",
+        "macmini 上 cn-client-investigation/scripts/cn_typo_scan.py 和 provenance_verify.py 可执行（chmod +x + 无 shebang 错）"
+      ],
+      "verification_method": "ssh macmini 跑 cat version + python3 脚本 --help"
+    }
+  ],
+  "created_at": "2026-04-18T18:32:00+08:00"
+}

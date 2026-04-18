@@ -294,6 +294,16 @@ Format: Clear headers, bullet points, concise paragraphs
 
 ## STEP-BY-STEP WORKFLOW
 
+### Phase 0.5: CN target pre-flight check
+
+**If the target is a China-market entity (A股 / 港股 / 科创板 / 创业板 / 北交所 / 中概股 or private-unicorn Chinese company), activate the [`cn-client-investigation`](../cn-client-investigation/SKILL.md) skill BEFORE starting Phase 1.**
+
+CN targets have a different data-source hierarchy (T1 = 巨潮资讯 + Tushare > T2 = 交易所 + 天眼查 > T3 = FMP/Finnhub > T4 = 财经媒体) and a different financial disclosure pattern (Chinese GAAP, 归母净利 vs 扣非, 科创板差异化披露). The cn-client-investigation skill's Rules 4-6 reset the data-collection defaults to match.
+
+Additionally, the deliverable's `data-provenance.md` (Rule 5) is **mandatory** for CN targets — every hard number in the datapack Excel tabs must have a corresponding provenance row, verified via `provenance_verify.py`. No CN-target datapack ships without this gate passing.
+
+For non-CN targets, skip this pre-flight and continue with Phase 1 below.
+
 ### Phase 1: Document Processing and Data Extraction
 
 **Step 1.1: Analyze source data**

@@ -18,6 +18,26 @@ Use this skill when the final output should be a PowerPoint artifact.
 - customer or deal summary slides
 - packaging analysis into presentation-ready pages
 
+## CN target pre-flight (MANDATORY when target is a Chinese-market entity)
+
+Before touching any pptxgenjs slide code, check whether the target company is a China-market entity. If the context mentions any of the following triggers:
+
+- **Market/regulator**: 中国 / A股 / 港股 / 科创板 / 创业板 / 北交所 / 中概股 / H股 / 证监会 / 上交所 / 深交所 / 港交所
+- **Source systems**: 巨潮资讯 / cninfo / Tushare / 天眼查 / 企查查
+- **Common China-market tickers**: `*.SH` / `*.SZ` / `*.BJ` / `*.HK`
+
+...then you MUST load and follow the [`cn-client-investigation`](../cn-client-investigation/SKILL.md) skill before generating any slides. That skill enforces:
+
+- **Rule 1**: write Chinese in UTF-8 literal, NEVER as `\uXXXX` escape sequences — MiniMax-M2.7 has documented character-level drift on long Chinese escapes (e.g. 寒武纪 → 宽厭谛79)
+- **Rule 2**: for company names / section headers / financial line items / investment ratings, require the `cn-lexicon.js` literal dictionary instead of inline-typing Chinese
+- **Rule 3**: cover pages use English 44pt as hero title + Chinese ≤28pt as subtitle (English ASCII has zero escape-typo risk)
+- **Rule 4**: tier-ordered China-market data sources (Tushare / CNINFO / 交易所 / 天眼查 / FMP)
+- **Rule 5**: every hard number in the analysis.md must have a matching row in `data-provenance.md` — verified via `provenance_verify.py`
+- **Rule 6**: no fabrication on missing data — label "数据不可得" / "N/A" instead
+- **Rule 7**: `cn_typo_scan.py` is a **mandatory compile-time gate** — your `slides/compile.js` must be based on `compile_with_typo_gate.template.js` so a scan hit blocks the pptx from shipping
+
+For non-CN targets, skip this pre-flight and use the regular `ppt-deliverable` routing below.
+
 ## Tooling preference
 
 Route PPT generation through the host's MiniMax PPT stack. On `macmini`, that means:

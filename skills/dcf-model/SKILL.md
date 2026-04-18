@@ -99,6 +99,16 @@ This applies to every merged section header in the DCF (market data, scenario bl
 
 ## DCF Process Workflow
 
+### Step 0.5: CN target pre-flight check
+
+**If the target is a China-market entity (A股 / 港股 / 科创板 / 创业板 / 北交所 / 中概股 or private-unicorn Chinese company), activate the [`cn-client-investigation`](../cn-client-investigation/SKILL.md) skill BEFORE starting data collection.**
+
+That skill's Rule 4 (tier-ordered data sources: 巨潮 / Tushare / 交易所 / 天眼查 / FMP) and Rule 6 (no-fabrication on missing data — label 数据不可得 / N/A) apply directly to this DCF workflow. Every hard number you emit into the Excel model must have a matching row in the deliverable's `data-provenance.md` (Rule 5, enforced by `provenance_verify.py`).
+
+Do NOT cross-mix US-default data-source conventions (FMP as primary for historicals) with CN-target flows — CN primary is Tushare via `aigroup-market-mcp__company_performance`; FMP is T3 fallback.
+
+For non-CN targets, skip this pre-flight and continue with Step 1 below.
+
 ### Step 1: Data Retrieval and Validation
 
 Fetch data from MCP servers, user provided data, and the web.

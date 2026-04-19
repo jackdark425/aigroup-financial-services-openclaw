@@ -103,7 +103,7 @@
       "id": "US-007",
       "title": "如 US-006 有 patch: 双仓 bump + publish + macmini 升级 + 5 家 real-test 绿 (如 US-006 无 patch 则 SKIPPED)",
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "如 US-006 无 plugin edits：标记此 story 为 SKIPPED (passes: true)；progress.txt 记录 'no new publish needed'",
         "如 US-006 有 edits：financial 版本 0.7.0 → 0.7.x / lead 0.6.1 → 0.6.x (patch bump)；git push; clawhub publish; macmini 升级；五个 deliverable 在 macmini 侧跑一次 validate-delivery 对比 local 的结果"

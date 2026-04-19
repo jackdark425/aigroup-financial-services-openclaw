@@ -26,4 +26,4 @@ multi-company-test-20260420 — iteration 1 (start 10:00)
 - **precision_scan 二次加固**：在 metric_key + int_part 基础上增加精度容差检查（`|a-b| ≤ 0.5*10^(-min_precision)`）。cross-year 同指标不同真值（如 `8.66% vs 9.47%`）因 diff 大于容差不再误报；同值不同精度（如 `1.34 / 1.340 / 1.3 元/股`）仍捕获。wuliangye 3.5/4.5 "洋河股份股息率" 被 reclassify 为数据冲突（不是精度漂移）—— 仍被 provenance_verify --strict L78 独立捕获，双重防线
 - [x] US-006 两个 bug 已 patch（_shared.py + verify_intelligence.py）；5 家回归全绿 + wuliangye + BYD 回归不退步
 
-- [ ] US-007 双仓 bump + publish + macmini
+- [x] US-007 双仓 bump (financial 0.8.0 / lead 0.7.1) + ClawHub publish + macmini 升级；5 家在 macmini 端 validate-delivery --strict --style 均 PASS；BYD 回归 PASS；wuliangye/haitian 仍 exit 1（slide_data_audit 捕获 deliverable 数据 gap，非 plugin bug）

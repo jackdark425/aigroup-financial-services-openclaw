@@ -1,29 +1,24 @@
-data-text-accuracy-20260419 — iteration 1 (start 11:20)
+bug-fix-ppt-quality-20260419 — iteration 1 (start 12:10)
 
 ## 起点
-- financial @ 0.4.1 / lead @ 0.3.2 均在 GitHub + ClawHub + macmini 对齐
-- 海天味业 audit 刚跑完: OVERALL FLAG — 1 FAIL (EPS 2022 pre/post-restatement) + 2 FLAG (股价基准 / ROE 口径) + 12 PASS
-- 三道 upstream gate 全绿却漏 audit 1 FAIL — 说明 gate 规则上需加强
+- financial @ 0.5.0 / lead @ 0.4.0 均在 GitHub + ClawHub + macmini 对齐（上轮 data-text-accuracy-20260419 已收尾）
+- 上轮遗留 non-blocking 4 条（architect review）：
+  (1) precision_scan 在 provenance_verify.py 和 style_scan.py 之间 duplication
+  (2) find_provenance_line_for first-match semantics
+  (3) ClawHub cosmetic dupe（已 chip-spawn，不在本轮 scope）
+  (4) SKILL.md 规则数分解（已修）
+- 海天味业 macmini 实测发现 cn_typo_scan 对合法汉字+数字 7 个 false positive
 
 ## 目标
-把 audit 抓到的 3 类问题规则上移到 upstream gate:
-1. estimate-as-T1: `~22.9%` 写法 + T1 source 标注 → provenance_verify --strict 拦
-2. pre/post-restatement 混用 → data-quality-audit 新 rule 主动 flag 大 diff 可能是 restatement
-3. 文字/数字/口径表达不一 → 新 style_scan.py 扫
+(a) 修 bug：cn_typo_scan whitelist 补全 (US-001)、precision_scan dedup (US-002)、find_provenance_line_for best-match (US-003)
+(b) PPT 数据准确性 gate：新增 slide_data_audit.py (US-004) + validate-delivery 集成 (US-005)
+(c) 升级 macmini + 实测 (US-006, US-007)
 
 ## 故事进度
-- [x] US-001 provenance_verify --strict (estimate-as-T1 + 精度不一)
-- [x] US-002 common-sense-rules 新 3 条 (restatement / ROE 口径 / price-basis)
-- [x] US-003 style_scan.py (货币/期间/日期/同比术语一致性)
-- [x] US-004 validate-delivery 建议跑 audit + data-sources.md 加 estimate/restatement 规范
-- [x] US-005 双仓 bump 0.5.0 / 0.4.0 + publish + macmini 升级
-- [x] US-006 对 haitian 实测验证新工具抓到真实老问题
-
-## 落地后关键事实
-- financial repo: 373297d v0.5.0 — provenance_verify --strict + style_scan + validate-delivery --strict/--style + SKILL.md Rule 5 + data-sources.md 新规范
-- lead repo: 3ef721b v0.4.0 — common-sense-rules 13 条 (原 10 + 新 restatement_aware / roe_definition_check / price_basis_check)
-- ClawHub: aigroup-financial-services-openclaw@0.5.0 + aigroup-lead-discovery-openclaw@0.4.0 均 Latest
-- macmini: 两仓都装到最新版，SMOKE PASS (minimax-cn / MiniMax-M2.7 + 5 skill visible)
-- 实测验证: /Users/jackdong/deliverables/haitian-stable --strict 正确 FAIL at L60 '~22.9%' estimate-as-T1; style_scan --warn-only clean
-- 已知副作用: ClawHub 上存在 cosmetic dupe 'aigroup-financial-services-openclaw-release@0.5.0' (第一次 publish 时 folder basename 污染了 package name)，真正的 aigroup-financial-services-openclaw@0.5.0 是权威版本，dupe 无害但需要清理
-- cn_typo_scan false-positive: haitian pptx 有 7 个 '续14年' / '达53%' 类的 hanzi-then-digit 被误标 typo；这是 regex 过宽的已知问题，在本轮 iteration scope 外
+- [ ] US-001 cn_typo_scan whitelist +续受达至 (消除 haitian 7 false positive)
+- [ ] US-002 precision_scan 抽共享 util
+- [ ] US-003 find_provenance_line_for → best-match
+- [ ] US-004 slide_data_audit.py 新脚本
+- [ ] US-005 validate-delivery 集成 slide_data_audit
+- [ ] US-006 双仓 bump 0.6.0 / 0.5.0 + publish + macmini 升级
+- [ ] US-007 macmini 端到端 海天 + 五粮液 real test

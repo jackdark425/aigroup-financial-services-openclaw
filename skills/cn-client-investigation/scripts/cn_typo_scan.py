@@ -51,6 +51,11 @@ RED_FLAG_DYADS = [
 #    the classic symptom of a `\\uXXXX` truncation where the closing digits
 #    of the escape got parsed as literal text.
 RE_HANZI_THEN_DIGIT = re.compile(r"[\u4e00-\u9fff][0-9]")
+# Year-like digit runs (19xx/20xx) right after a hanzi are almost never an
+# escape drift — escape drift produces random digit tails, not coherent
+# 4-digit years. Gate below: if the hit's trailing digit sequence starts
+# with 19XX or 20XX, treat as benign.
+RE_YEAR_TAIL = re.compile(r"(19|20)\d{2}")
 
 # 2. CJK Compatibility / rare CJK-Extension chars that should not appear in
 #    banker deliverables. A simple hit on U+3400-U+4DBF (CJK Extension A) or
@@ -102,10 +107,25 @@ def scan(text: str) -> list[tuple[int, str, str]]:
                 "窖红额于指居金应在间售"
                 # frequency / ordinal / proportion qualifiers
                 "高中低同环比首半全三四两"
+                # verbs that legitimately precede digits in banker prose:
+                #   续 (连续 14 年), 受 (受 2022 年疫情), 达 (毛利率达 53%),
+                #   至 (下降至 38.3 亿 / 恢复至 73.6 亿), 破 (already above),
+                #   增 (同比增 17%), 达到/到 (达到 X / 增长到 Y), 逾 (逾 100 亿),
+                #   过 (超过 X 亿 / 不过 X%), 仅 (仅 3%), 约 (already above),
+                #   计 (共计 already as 共), 期 (期内 3Q), 降 (下降 X%),
+                #   减 (减 X%), 涨 (上涨 X%), 跌 (下跌 X%),
+                #   有 (有 X 家 / 具有 X), 下 (下滑 3% — 下 can be noun 'down')
+                "续受达至到增逾过仅期降减涨跌有下"
                 # foreign brand heads
                 "LVMH"
             )
             if m.group(0)[0] in WHITELIST_LEADS:
+                continue
+            # Year-tail guard: if the digit starts a 4-digit year sequence
+            # (e.g. "增速2024E" / "受2022年"), treat as legitimate year
+            # reference rather than escape drift.
+            tail = line[m.start() + 1:m.start() + 5]
+            if RE_YEAR_TAIL.match(tail):
                 continue
             hits.append((lineno, ctx.strip()[:120], f"hanzi-then-digit '{m.group(0)}' — escape drift suspect"))
         for m in RE_RARE_CJK.finditer(line):

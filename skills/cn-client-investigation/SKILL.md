@@ -182,19 +182,20 @@ Route PPT generation through the unified `ppt-deliverable` → host MiniMax `sli
 
 ### Phase 5 — QA (用 `validate-delivery.py` 单入口)
 
-**推荐一条命令跑完三道 gate**：
+**推荐一条命令跑完四道 gate**：
 
 ```bash
 python3 ~/.openclaw/extensions/aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/validate-delivery.py \
     --strict --style \
     /path/to/deliverable_dir
-# exit 0 → 3/3 PASS (verify_intelligence + cn_typo_scan + provenance_verify) + optional style_scan WARN-only
+# exit 0 → 4/4 PASS (verify_intelligence + cn_typo_scan + slide_data_audit + provenance_verify) + optional style_scan WARN-only
 # exit 1 → 至少一道 gate 失败，stderr 指出是哪道 + 具体行号 / 原因
 ```
 
 这个 aggregator 自动按文件名 find：
 - `*intelligence*.md` → `verify_intelligence.py`（跨插件引用 lead-discovery 的 cn-lead-safety）
 - `*.pptx` → 自动 extract text + `cn_typo_scan.py`
+- `*.pptx` + `data-provenance.md` → `slide_data_audit.py`（**NEW v0.6.0**：PPT 上每个硬数字必须有 provenance 行支撑；捕获 Phase 4 手改 slide-NN.js 后 provenance 未同步更新的漂移）
 - `analysis.md` + `data-provenance.md` → `provenance_verify.py`（`--strict` 开启 estimate-as-T1 smuggling 检测 + 精度漂移 WARN）
 - 可选 `--style` → `style_scan.py --warn-only` 对 analysis.md 扫货币/期间/日期/YoY 术语一致性（非阻塞）
 

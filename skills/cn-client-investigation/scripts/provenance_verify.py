@@ -32,11 +32,12 @@ cn-client-investigation skill, and it can also be wired into CI if the
 deliverable is checked into a repo.
 """
 from __future__ import annotations
-import collections
 import pathlib
 import re
 import sys
 from typing import Iterable
+
+from _shared import find_precision_drift
 
 
 # --- Regex: the hard-number pattern we flag ---
@@ -263,51 +264,50 @@ def find_estimate_hits(analysis_text: str) -> list[tuple[int, str, str, str]]:
 def find_provenance_line_for(
     provenance_text: str, num: str, unit: str
 ) -> str | None:
-    """Return the first full line in provenance_text that contains this
-    number+unit (or a bare-number fallback). None if not found."""
+    """Find the provenance row that best matches ``num+unit``.
+
+    Preference order (stronger match wins; within a tier, a row marked
+    with a DERIVATION_MARKERS keyword wins over an unmarked row so the
+    strict-mode estimate check doesn't false-FAIL on author-tagged rows):
+
+    1. ``{num}{unit}`` appears as a contiguous substring (e.g. ``1.34元``)
+    2. ``{num} {unit}`` with a space between (e.g. ``1.34 元``)
+    3. Bare-number + unit both appear somewhere in the row, but the
+       number token isn't adjacent to the unit — soft match only used
+       when stronger matches are absent.
+
+    Returns ``None`` when no row matches any tier.
+    """
     needle = f"{num}{unit}"
     needle_spaced = f"{num} {unit}"
-    for raw in provenance_text.splitlines():
-        if needle in raw or needle_spaced in raw:
-            return raw
-        # bare-number fallback
-        if num.replace(",", "") in raw and unit in raw:
-            return raw
+    bare_num = num.replace(",", "")
+    lines = provenance_text.splitlines()
+
+    def _best_of(candidates: list[str]) -> str | None:
+        """Prefer a row explicitly labelled as derived/estimated."""
+        if not candidates:
+            return None
+        for raw in candidates:
+            if any(tok in raw for tok in DERIVATION_MARKERS):
+                return raw
+        return candidates[0]
+
+    tier1 = [raw for raw in lines if needle in raw]
+    if tier1:
+        return _best_of(tier1)
+    tier2 = [raw for raw in lines if needle_spaced in raw]
+    if tier2:
+        return _best_of(tier2)
+    tier3 = [raw for raw in lines if bare_num in raw and unit in raw]
+    if tier3:
+        return _best_of(tier3)
     return None
 
 
 def precision_scan(analysis_text: str) -> list[str]:
-    """Detect same-unit multi-precision writes across the doc.
-
-    Heuristic (simpler than the pre-context version — banker prose
-    reliably uses the same unit when citing the same metric, and
-    repeating a value at different precisions in the same document is
-    almost always precision drift not genuine distinct period data):
-    group all hard numbers by (rounded-integer-part, unit), then if any
-    group contains ≥ 2 distinct string forms (e.g. "1.34元/股" and
-    "1.340元/股" and "1.3元/股"), emit a drift warning. Period-distinct
-    values (e.g. "56.27 亿元" vs "83.27 亿元" for different years) round
-    to different integers and never collide.
-    """
-    # key = (int_part, unit)
-    groups: dict[tuple[int, str], set[str]] = collections.defaultdict(set)
-    for line in analysis_text.splitlines():
-        for m in HARD_NUMBER.finditer(line):
-            num_str, unit = m.group(1), m.group(2)
-            try:
-                n = float(num_str.replace(",", ""))
-            except ValueError:
-                continue
-            int_part = int(round(n))
-            groups[(int_part, unit)].add(f"{num_str}{unit}")
-    warnings: list[str] = []
-    for (int_part, unit), values in groups.items():
-        if len(values) < 2:
-            continue
-        warnings.append(
-            f"precision drift near {int_part}{unit}: {', '.join(sorted(values))}"
-        )
-    return warnings
+    """Thin wrapper: delegate to _shared.find_precision_drift using this
+    script's HARD_NUMBER regex (which covers the banker-unit set)."""
+    return find_precision_drift(analysis_text, HARD_NUMBER)
 
 
 def strict_verify(

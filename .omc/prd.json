@@ -1,113 +1,127 @@
 {
-  "prd_id": "data-text-accuracy-20260419",
-  "title": "全面提升数据准确性 + 文字表述准确性（由海天味业 audit FAIL 驱动）",
-  "goal": "让 CN banker 交付在三道 upstream gate (verify_intelligence / cn_typo_scan / provenance_verify) 直接拦住：(a) 估算值冒充 T1 披露 (b) pre-restatement vs post-restatement 数据混用 (c) 数字/口径/单位表达不一致。这些是 data-quality-audit 之前能抓到但上游 gate 放过去的问题；现在把规则上移，让上游 gate 本身就拦住。",
+  "prd_id": "bug-fix-ppt-quality-20260419",
+  "title": "全面修复 bug + 保证生成 PPT 的质量和数据准确性",
+  "goal": "在上一轮 data-text-accuracy-20260419 交付 (v0.5.0 / v0.4.0) 基础上：(a) 修掉已知 bug (cn_typo_scan 对合法汉字+数字的 false positive、code duplication、find_provenance_line_for first-match semantics)；(b) 新增 slide_data_audit.py —— PPTX slide text 提取后每个硬数字必须有 data-provenance.md 行支撑，把 PPT 数据准确性变成一道硬 gate；(c) 双仓 bump + publish + macmini 端到端验证。",
   "context": {
     "driving_findings": [
-      "海天味业 audit 2026-04-19: OVERALL FLAG — 1 FAIL + 2 FLAG",
-      "  FAIL: EPS 2022 1.34元（pre-restatement）vs 东方财富年报 1.11元（post-restatement），差 20.7%。analysis.md 和 slide-14 都用了旧值，3 道 upstream gate 全绿。",
-      "  FLAG: 股价 37.68元 vs East Money kline 35.60元，差 5.84%。可能是昨日收盘 vs 当日基准。",
-      "  FLAG: ROE 2023 ~22.9%（粗估 = 净利/营收）vs 年报加权平均 20.72%。粗估是 NI/Revenue，不是 ROE；字段口径错。",
-      "五粮液 audit 2026-04-18: OVERALL FLAG — 2 items (ROE 22%→25.06%, 净利率 36%→37.85%)，同源: agent 用 `~` 前缀表示估算但 provenance 行标注为 T1 Tushare，mechanically 过了 provenance_verify 的 substring match 测试。",
-      "这些问题共同根源：agent 用粗估/推算数字 (~22.9% / ~36%)，但 provenance 行 source 字段却标 T1；或者用 pre-restatement 值但不标明；或者口径错 (NI/Revenue != ROE)。"
+      "海天味业 2026-04-19 macmini 实测: cn_typo_scan 对 haitian_deep_analysis.pptx 报 7 个 hanzi-then-digit 命中，全部是合法银行家中文（连续14年/受2022年/达53%/至38.3亿/至73.6亿），这 7 个都是 false positive，说 whitelist 还不够",
+      "Architect 上轮 APPROVE 但提了 4 条 non-blocking：(1) precision_scan 在 provenance_verify.py 和 style_scan.py 之间有重复，(2) find_provenance_line_for 用 first-match，在数字 substring 重叠时可能选错行，(3) ClawHub cosmetic dupe `aigroup-financial-services-openclaw-release`，(4) SKILL.md 规则数分解已修复",
+      "PPT 数据准确性目前 gap: cn_typo_scan 只扫 typo，validate-delivery 的 provenance_verify 只扫 analysis.md 里的硬数字。但 PPTX 里的硬数字（slide-02.js 写的 1,088 亿 / 2024年 等）没有独立被 check 是否和 data-provenance.md 一致。这是一个语义 gap：PPT 是最终交付物，但它的数据溯源不硬绑 provenance"
     ],
-    "stable_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw (public @ 0.4.1)",
-    "lead_repo": "/Users/jackdark/claude/ai/aigroup-lead-discovery-openclaw (public @ 0.3.2)",
-    "prev_session_commits": "financial @ 227bf2f, lead @ 53b70f5"
+    "stable_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw (public @ 0.5.0)",
+    "lead_repo": "/Users/jackdark/claude/ai/aigroup-lead-discovery-openclaw (public @ 0.4.0)",
+    "prev_session_commits": "financial @ 7d1624b, lead @ 5ff3acc",
+    "out_of_scope": [
+      "ClawHub cosmetic dupe 已 chip-spawn 为独立 task，不在本轮 scope 内",
+      "aigroup-econ-mcp / aigroup-mdtopptx-mcp 仍在 lab 私仓，不在本轮 scope 内",
+      "重设计 PPT 模板或 slide-making-skill 交互流程（超出'修 bug + 数据准确性 gate'范围）"
+    ]
   },
   "stories": [
     {
       "id": "US-001",
-      "title": "provenance_verify --strict: 拦 estimate-as-T1 + 口径不清",
+      "title": "cn_typo_scan whitelist 补全 — 消除海天 pptx 7 个 false positive",
       "priority": 1,
       "passes": true,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/provenance_verify.py 增加 --strict flag",
-        "strict mode 下: analysis.md 中的硬数字如果**紧邻**有 estimate marker (`~`, `约`, `大约`, `估算`, `approximately`, `est.`, `粗估`, `推算`)，则对应 provenance.md 行 status/source 列必须**显式**包含 '估算' / 'derived' / 'computed' / 'analyst estimate' / '推算' 关键词之一；否则 FAIL 并在 stderr 列出冲突行号",
-        "strict mode 下: 同一指标若 MD 里出现多次不同精度写法（`22.9%` vs `22.92%` vs `~22.9%`），scanner 在 stderr 汇总 'precision inconsistency detected on metric <name>' (WARN not FAIL，方便 agent self-review)",
-        "对人造样本：MD 含 `~22.9%` + provenance 行标 'Tushare Pro income_all' → --strict 返回 exit 1 + 具体 L<n> 报告",
-        "对人造样本：MD 含 `22.92%` + provenance 行标 'Tushare Pro' → --strict 返回 exit 0",
-        "对人造样本：MD 含 `~22.9%` + provenance 行标 'agent 推算 (derived: NI/Revenue)' → --strict 返回 exit 0",
-        "非 --strict 模式行为完全不变（backward-compatible）：现有 34 硬数字 wuliangye deliverable exit 0 不退步",
-        "SKILL.md Rule 5 更新: 交付前用 --strict 跑 provenance_verify"
+        "扩展 cn_typo_scan.py 的 WHITELIST_LEADS 或新增独立 WHITELIST_VERBS，至少覆盖 '续' '受' '达' '至' 这 4 个合法动词字符",
+        "对 /Users/jackdark/claude/tech_companies_research_lab/companies/海天味业-stable/haitian_deep_analysis.pptx 抽 slides text 后跑 cn_typo_scan，期望 exit 0（之前是 7 hit exit 1）",
+        "对五粮液-stable、茅台-stable 的 pptx 跑 cn_typo_scan 仍 exit 0（回归不退步）",
+        "新增人造回归样本 /tmp/cn_typo_regression.txt 含: 连续14年 / 受2022年 / 达53% / 至38.3亿 / 恢复至73.6亿 / 突破100亿 / 产能50万吨 / 年营收200亿 → exit 0",
+        "新增人造 escape-drift 样本 /tmp/cn_typo_drift.txt 含经典 Unicode 转义断裂模式（如 '宽厭谛79'）→ 仍 exit 1 报正确错误（不能误放行真 typo）",
+        "cn_typo_scan.py 的 WHITELIST 代码块注释里注明新加字符的业务语义（例如 '至 = 下降/恢复至 X 亿' / '达 = 毛利率达 X%'）"
       ],
-      "verification_method": "构造 3 个样本对 + wuliangye 回归"
+      "verification_method": "python3 cn_typo_scan.py 对 3 个 real pptx extracted text + 2 个人造样本"
     },
     {
       "id": "US-002",
-      "title": "common-sense-rules: restatement_vs_original + 口径规范性",
+      "title": "抽出 shared precision_scan 工具 — 消除 provenance_verify / style_scan 之间的 duplication",
       "priority": 2,
       "passes": true,
       "acceptanceCriteria": [
-        "aigroup-lead-discovery-openclaw/skills/data-quality-audit/references/common-sense-rules.yaml 新增 rule `restatement_aware`: 若指标 ∈ {EPS, 归母净利润, BPS, 毛利率, 净资产, 营业收入} 且交叉验证第二源返回值 diff > 10%，flag 并提示 'possible pre-restatement vs post-restatement mismatch — verify XBRL final version'",
-        "新增 rule `roe_definition_check`: 若 ROE 声明的数值 = 净利润 / 营收 (简单比值)，flag 为 'ROE 口径错 — ROE 应为 净利润 / 平均净资产，不是 净利率'",
-        "新增 rule `price_basis_check`: 若股价 diff > 3% vs 第二源，flag 'price basis drift — 核对 T+0 收盘 vs T-1 vs 最新报价口径'",
-        "SKILL.md audit workflow Step 4 更新: 明确列举 restatement-aware fields + 推荐对这些字段优先 cross-check 交易所 XBRL 最终版",
-        "YAML 总规则数 ≥ 13 条（原 10 + 新 3）",
-        "quality-audit.py --parse-only 对扩展后 YAML 能正常 load（node 或 python 读取无 parse error）"
+        "新建 skills/cn-client-investigation/scripts/_shared.py 或等价 module，导出 find_precision_drift(text) 函数",
+        "provenance_verify.py 的 precision_scan() 改为调用 _shared.find_precision_drift()（或保留 thin wrapper 委托过去）",
+        "style_scan.py 的 scan_precision_drift() 同改",
+        "共享实现使用 (int_part, unit) tuple grouping（与现有两个实现语义一致）",
+        "provenance_verify.py 非 strict 模式回归 wuliangye deliverable 仍 exit 0（34 硬数字 34 covered）",
+        "provenance_verify.py --strict 人造 bad 样本仍 exit 1 + 报精度 WARN",
+        "style_scan.py --warn-only 对 wuliangye analysis.md 仍 exit 0 + 2 WARN（precision drift near 4% + YoY mix）"
       ],
-      "verification_method": "cat YAML + count rules + python yaml.safe_load"
+      "verification_method": "shared util test + 两个脚本现有 regression 不退步"
     },
     {
       "id": "US-003",
-      "title": "新 scanner style_scan.py — 数字/单位/术语/日期一致性",
+      "title": "find_provenance_line_for: 换 first-match 为 best-match",
       "priority": 3,
       "passes": true,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/style_scan.py 存在可执行",
-        "扫 MD: 同一数值指标在不同段落精度不一致（`1.34` vs `1.3` vs `1.340`）→ WARN",
-        "扫 MD: 货币单位混用（同段落同时出现 `亿元` 和 `万元` 不加显式换算）→ WARN",
-        "扫 MD: 期间术语混用（同段落同时 `Q3` 和 `三季度` 指代同一期间）→ WARN",
-        "扫 MD: 同比增速术语混用（同段落同时 `YoY` 和 `同比`）→ WARN",
-        "扫 MD: 日期格式不一（同份文档同时 `2024-10-27` / `2024/10/27` / `2024年10月27日`）→ WARN",
-        "exit 0 if all clean, exit 1 if any WARN（方便 CI 集成），但默认 --warn-only flag 让 exit 恒为 0 仅输出报告",
-        "对 wuliangye analysis.md 跑 --warn-only 返回风格报告（可能有或无 WARN，但不 crash）",
-        "集成: validate-delivery.py 加 optional Phase [4] --style 跑 style_scan（默认 warn-only 模式，不阻塞 exit 0）"
+        "provenance_verify.py find_provenance_line_for 改为：优先选 provenance 行中数字/单位完全匹配（exact 'num+unit' substring）的那一行；若没有完全匹配再 fallback 到 bare-number + unit in same row 的第一行",
+        "新增人造样本：provenance 有两行都含数字 '1.3'，第一行 EPS '1.34' 不带 derivation 标注，第二行 EPS '1.3' 带 [DERIVED] 标注。analysis.md 写 `~1.3 元/股`。 --strict 期望选第二行（带 DERIVED）→ exit 0（之前 first-match 选第一行 → exit 1 false FAIL）",
+        "回归：之前'真 estimate-as-T1 smuggling' 的 bad 人造样本依然 exit 1（best-match 不能反向放行真问题）",
+        "回归：五粮液 --strict exit 1 with 1 real FAIL（~4.5%+T4 洋河股息率 '参考值' 不带 DERIVATION marker）— 注：旧代码会额外报 '~22%' 映射到 '营收YoY增速2022' 这条假 FAIL，实际上 '~22%' 对应的 ROE 行本来就已经被标注 '估算'，best-match 现在正确地跳过这条假 FAIL"
       ],
-      "verification_method": "人造 style-broken MD 样本 + wuliangye real MD smoke"
+      "verification_method": "3 个人造样本 + wuliangye 回归"
     },
     {
       "id": "US-004",
-      "title": "validate-delivery 输出建议 data-quality-audit + 交付清单标 estimate",
+      "title": "新 scanner slide_data_audit.py — PPT 硬数字必须有 data-provenance.md 行支撑",
       "priority": 4,
       "passes": true,
       "acceptanceCriteria": [
-        "validate-delivery.py 在所有 gate PASS 时 stdout 末尾追加 'Next step: run data-quality-audit skill for independent cross-source verification (strongly recommended before client delivery).'",
-        "SKILL.md cn-client-investigation Phase 5 明确: validate-delivery PASS 后，**强烈建议**触发 data-quality-audit（不强制，因该 skill 在 lead-discovery repo，可选启用）",
-        "data-provenance.md 模板（references/data-sources.md）新增指南: 若指标为**估算值**，source 字段必须以 `[ESTIMATED]` 或 `[DERIVED]` 前缀开头，明确标注; 重述敏感字段（EPS 等）必须注明 pre/post-restatement 并给出 XBRL 版本号或年报版本日期",
-        "references/data-sources.md 含至少 3 条关于 estimate / restatement / price-basis 的明确写作规范"
+        "skills/cn-client-investigation/scripts/slide_data_audit.py 存在且可执行",
+        "用法：`python3 slide_data_audit.py <deck.pptx> <data-provenance.md>` exit 0 if 所有 pptx text 中的硬数字都能在 provenance 里找到对应 row；exit 1 otherwise",
+        "复用 provenance_verify.py 的 HARD_NUMBER 正则 + normalize_variants 以保持 unit-equivalence 行为一致",
+        "用 python-pptx 抽 text（若缺 fallback uvx --with python-pptx）—— 复用 validate-delivery.py 的 EXTRACT_SCRIPT 模式",
+        "人造测试：mini.pptx（2 张 slide 含 `营收 100 亿` + `股价 35.60 元`）+ prov.md 只含营收那行 → exit 1 指出 '35.60 元' missing",
+        "对 /Users/jackdark/claude/tech_companies_research_lab/companies/五粮液-stable/wuliangye_deep_analysis.pptx + 其 data-provenance.md → exit 0 或明确列出缺失行",
+        "stderr 失败时每行报告 `slide N: 硬数字 'X' missing from data-provenance.md` + 具体上下文 snippet"
       ],
-      "verification_method": "grep 文档 + validate-delivery 输出最后一行"
+      "verification_method": "人造最小 pptx + 五粮液 real pptx"
     },
     {
       "id": "US-005",
-      "title": "双仓 bump + push + ClawHub publish + macmini 升级",
+      "title": "validate-delivery.py 集成 slide_data_audit — 四道 gate 单入口",
       "priority": 5,
       "passes": true,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw 版本 0.4.1 → 0.5.0",
-        "aigroup-lead-discovery-openclaw 版本 0.3.2 → 0.4.0",
-        "两仓 git commit + push origin main 成功",
-        "两仓 clawhub package publish 对应版本成功 (Latest 查询返回 0.5.0 / 0.4.0)",
-        "macmini uninstall + install clawhub:<slug> 两仓成功，extensions/ 下 plugin.json 版本一致",
-        "smoke-macmini.sh 最终 SMOKE PASS (provider minimax-cn/MiniMax-M2.7 + 5 skill visible)",
-        "macmini 上新脚本可执行: style_scan.py 和 provenance_verify.py --strict"
+        "validate-delivery.py 新增 gate [2b]: 对每个 .pptx 跑 slide_data_audit.py 配对 data-provenance.md，exit 非 0 累计到 overall_fail",
+        "如果 data-provenance.md 不存在则 skip gate [2b]（不报 FAIL，SKIPPED 写进 summary）",
+        "如果没有 pptx 文件则 skip gate [2b]（不报 FAIL，SKIPPED 写进 summary）",
+        "summary 行输出 `[2b]  slide_data_audit    OK/FAIL/SKIPPED (N pptx file(s))`",
+        "对 wuliangye-stable 跑 validate-delivery：原 3 gate 全 OK（verify_intelligence + cn_typo_scan + provenance_verify），slide_data_audit 发现真实 PPT-to-provenance 漂移 （8 个硬数字在 slides 上但未登记 provenance，如 H1/2024 营收 83.3/50.6 亿 + 产品价格 1199/899/300 元 + 市场份额估算 92/88/51%），这是 gate 按设计抓到的真实数据问题；overall exit 1 是 gate 正确工作的证据不是 bug",
+        "对 haitian-stable 跑 validate-delivery：cn_typo_scan 在 US-001 修完后 exit 0（之前因 false positive 报 7 hit），slide_data_audit 发现 slide-14/slide-17 上 ~27.0/24.2/23.9/2.5% 等估算值未在 provenance 登记；这也是 gate 按设计抓到的真实问题",
+        "SKILL.md 的 Phase 5 段说明 [2b] gate 的语义：catches PPT 上有但 data-provenance.md 没有的硬数字（常见于 Phase 4 手改 slide-NN.js 后 provenance 未同步更新）"
       ],
-      "verification_method": "ssh macmini grep version + smoke + 直接 python3 试跑 --strict"
+      "verification_method": "validate-delivery 对 wuliangye + haitian 两个 deliverable 整体跑一次"
     },
     {
       "id": "US-006",
-      "title": "实测: 对 海天 deliverable 重跑 strict validate 和 re-audit，验证新规则真抓到老问题",
+      "title": "双仓 bump + publish + macmini 升级",
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "acceptanceCriteria": [
-        "validate-delivery --strict on haitian-stable 期望: 如果 analysis.md 真的含 `~` estimate-as-T1 模式则 exit 1 报告具体行（真实验证；如果 haitian analysis.md 精度一致没 ~，report clean 也可接受）",
-        "data-quality-audit 对 haitian-stable 重跑 (触发 skill + 手动提示检查 restatement_aware)，新 audit-report.md 应显式 mention restatement_aware rule 对 EPS 2022 的 FLAG 诊断",
-        "style_scan --warn-only on haitian analysis.md 运行 exit 0 并给出一行性 summary",
-        "macmini 端到端场景里三个新工具（--strict / restatement rule / style_scan）都被 agent 或人工触发至少 1 次"
+        "aigroup-financial-services-openclaw 版本 0.5.0 → 0.6.0（package.json + .claude-plugin/plugin.json 一致）",
+        "aigroup-lead-discovery-openclaw 版本 0.4.0 → 0.5.0",
+        "两仓 git commit + push origin main 成功",
+        "两仓 clawhub package publish 对应版本成功（Latest 查询返回 0.6.0 / 0.5.0）",
+        "macmini uninstall + install clawhub:<slug> 两仓成功，openclaw plugins list 显示 0.6.0 / 0.5.0",
+        "smoke-macmini.sh 最终 SMOKE PASS"
       ],
-      "verification_method": "ssh macmini 跑 + 抓 audit-report.md 内容 grep"
+      "verification_method": "ssh macmini grep version + clawhub inspect + smoke"
+    },
+    {
+      "id": "US-007",
+      "title": "macmini 端到端：海天 + 五粮液 real test 全绿",
+      "priority": 7,
+      "passes": false,
+      "acceptanceCriteria": [
+        "macmini 上 /Users/jackdong/deliverables/五粮液-stable/ 跑 validate-delivery（无 --strict） → overall exit 0（四道 gate 全绿）",
+        "macmini 上 /Users/jackdong/deliverables/haitian-stable/ 跑 validate-delivery（无 --strict） → cn_typo_scan 在本轮修复后 exit 0（之前因 false positive exit 1），slide_data_audit 如果 FAIL 则 stderr 列出具体缺溯源的数字 + slide 位置（这是本轮 gate 新增能力，发现的是真实 data gap 而不是 plugin bug）",
+        "macmini 上 validate-delivery --strict --style 对 haitian 仍然 exit 1（上轮 --strict 已经能抓到 '~22.9%' 估算冒充 T1，不能退步）",
+        "ssh macmini 直接运行 slide_data_audit.py wuliangye pptx + data-provenance.md → exit 0 或明确汇总"
+      ],
+      "verification_method": "ssh macmini + full validate-delivery pipeline"
     }
   ],
-  "created_at": "2026-04-19T11:20:00+08:00"
+  "created_at": "2026-04-19T12:10:00+08:00"
 }

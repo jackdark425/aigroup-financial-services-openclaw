@@ -52,6 +52,7 @@ SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 CN_TYPO_SCAN = SCRIPT_DIR / "cn_typo_scan.py"
 PROVENANCE_VERIFY = SCRIPT_DIR / "provenance_verify.py"
 STYLE_SCAN = SCRIPT_DIR / "style_scan.py"
+SLIDE_DATA_AUDIT = SCRIPT_DIR / "slide_data_audit.py"
 
 # verify_intelligence.py is in the paired lead-discovery plugin. Try a few
 # known locations in order. If none resolves, that gate is reported as
@@ -212,6 +213,33 @@ def main() -> int:
                 pass
         summary.append(
             f"[2/3] cn_typo_scan         {'OK' if all_ok else 'FAIL'} "
+            f"({len(pptx_files)} pptx file(s))"
+        )
+        if not all_ok:
+            overall_fail = 1
+
+    # -------- Gate 2b: slide_data_audit on each *.pptx ↔ data-provenance.md --------
+    provenance_early = d / "data-provenance.md"
+    if not pptx_files:
+        summary.append("[2b]  slide_data_audit    SKIPPED (no .pptx in dir)")
+    elif not provenance_early.exists():
+        summary.append(
+            "[2b]  slide_data_audit    SKIPPED (no data-provenance.md to cross-check against)"
+        )
+    else:
+        all_ok = True
+        for p in pptx_files:
+            pp = pathlib.Path(p)
+            rc, so, se = run_gate(SLIDE_DATA_AUDIT, [str(pp), str(provenance_early)])
+            if rc != 0:
+                all_ok = False
+                print(f"  [fail] slide_data_audit on {pp.name}", file=sys.stderr)
+                if se.strip():
+                    print("    " + se.strip().replace("\n", "\n    ")[:2000], file=sys.stderr)
+            else:
+                print(f"  [ok] slide_data_audit on {pp.name}: {so.strip()}")
+        summary.append(
+            f"[2b]  slide_data_audit    {'OK' if all_ok else 'FAIL'} "
             f"({len(pptx_files)} pptx file(s))"
         )
         if not all_ok:

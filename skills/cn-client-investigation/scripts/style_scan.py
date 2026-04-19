@@ -18,6 +18,8 @@ import re
 import sys
 from pathlib import Path
 
+from _shared import find_precision_drift
+
 # hard number pattern: 1.34元/股, 1,088亿元, 22.9% etc.
 HARD_NUMBER = re.compile(
     r"(?<![0-9A-Za-z\u4e00-\u9fa5])"
@@ -41,24 +43,9 @@ WAN_YUAN = re.compile(r"(?<!亿)万元")  # avoid double-match on 亿元
 
 
 def scan_precision_drift(text: str) -> list[str]:
-    """same (int_part, unit) with multiple precisions → WARN."""
-    groups: dict[tuple[int, str], set[str]] = {}
-    for line in text.splitlines():
-        for m in HARD_NUMBER.finditer(line):
-            num_str, unit = m.group(1), m.group(2)
-            try:
-                n = float(num_str.replace(",", ""))
-            except ValueError:
-                continue
-            key = (int(round(n)), unit)
-            groups.setdefault(key, set()).add(f"{num_str}{unit}")
-    warnings = []
-    for (int_part, unit), values in groups.items():
-        if len(values) >= 2:
-            warnings.append(
-                f"precision drift near {int_part}{unit}: {', '.join(sorted(values))}"
-            )
-    return warnings
+    """Thin wrapper: delegate to _shared.find_precision_drift using this
+    script's HARD_NUMBER regex (which covers style-scan-specific units)."""
+    return find_precision_drift(text, HARD_NUMBER)
 
 
 def scan_currency_unit_mix(text: str) -> list[str]:

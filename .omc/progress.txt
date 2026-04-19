@@ -1,32 +1,29 @@
-bug-fix-ppt-quality-20260419 — iteration 1 (start 12:10)
+multi-company-test-20260420 — iteration 1 (start 10:00)
 
 ## 起点
-- financial @ 0.5.0 / lead @ 0.4.0 均在 GitHub + ClawHub + macmini 对齐（上轮 data-text-accuracy-20260419 已收尾）
-- 上轮遗留 non-blocking 4 条（architect review）：
-  (1) precision_scan 在 provenance_verify.py 和 style_scan.py 之间 duplication
-  (2) find_provenance_line_for first-match semantics
-  (3) ClawHub cosmetic dupe（已 chip-spawn，不在本轮 scope）
-  (4) SKILL.md 规则数分解（已修）
-- 海天味业 macmini 实测发现 cn_typo_scan 对合法汉字+数字 7 个 false positive
+- financial @ 0.7.0 / lead @ 0.6.1 均在 GitHub + ClawHub + macmini 对齐
+- BYD 实测已发现 2 个 bug 并在 v0.7.0 修完 (CITATION_ANCHORS / precision_scan pre-context)
+- 目标：5 家不同板块真实测试，验证 v0.7.0 在生产下工作
 
 ## 目标
-(a) 修 bug：cn_typo_scan whitelist 补全 (US-001)、precision_scan dedup (US-002)、find_provenance_line_for best-match (US-003)
-(b) PPT 数据准确性 gate：新增 slide_data_audit.py (US-004) + validate-delivery 集成 (US-005)
-(c) 升级 macmini + 实测 (US-006, US-007)
+横向压测 4 道 gate + --strict + --style：
+1. 招商银行 (银行)
+2. 中国平安 (保险)
+3. 恒瑞医药 (医药)
+4. 美的集团 (家电)
+5. 宁德时代 (动力电池)
 
 ## 故事进度
-- [x] US-001 cn_typo_scan whitelist +续受达至 + year-tail guard (消除 haitian 7 + maotai 1 false positive)
-- [x] US-002 precision_scan 抽共享 util (_shared.find_precision_drift, 两个 scanner 都 thin-wrapper 委托)
-- [x] US-003 find_provenance_line_for → best-match (tier-1 exact / tier-2 spaced / tier-3 bare，同 tier 内优先 DERIVATION-labeled)
-- [x] US-004 slide_data_audit.py 新脚本 (87 wuliangye slide 硬数字里发现 8 个 provenance 缺口)
-- [x] US-005 validate-delivery 集成 slide_data_audit (四道 gate + [2b] SKIPPED semantics)
-- [x] US-006 双仓 bump 0.6.0 / 0.5.1 + publish + macmini 升级 (ClawHub Latest 0.6.0 / 0.5.2 — 后者 bundle plugin.json 是 0.5.1, tag 超前 1 patch 是 bundle 缓存 stale plugin.json 的现象)
-- [x] US-007 macmini 端到端 海天 + 五粮液 real test (cn_typo_scan 从 7 hit → 0 hit; --strict L60 仍正确 FAIL; slide_data_audit 抓到 PPT-to-provenance 真实漂移)
+- [x] US-001 招商银行 — OVERALL PASS (4 gates) + 2 precision-drift WARN 揭示了 pre-context 在 markdown 表格内无效的真 bug（表格值前只有 `|` 空格没 CJK）
+- [x] US-002 中国平安 — OVERALL PASS（4 gates 后修 citation）；发现：CITATION_ANCHORS 未包含 `中鹏信评` 等评级机构名；一次绕过后通过。保险板块特有指标 EV/NBV/偿付能力均被 provenance gate 正确识别
+- [x] US-003 恒瑞医药 — OVERALL PASS 干净，no finding。医药板块 R&D 强度 / License-out / 创新药占比指标均被 gates 正确处理
+- [x] US-004 美的集团 — OVERALL PASS（4 gates 后修 citation + precision），发现：(a) `界面新闻` 不在 CITATION_ANCHORS，(b) **cross-year 同指标 `9.47/8.66`、`14.29/14.10`、`26.42/26.49` 误报 precision drift** —— pre-context 正确匹配同指标但 int_part 同一桶，真值不同但都 round 到同一整数
+- [x] US-005 宁德时代 — OVERALL PASS（4 gates 后修 citation），发现：`中国基金报` 不在 CITATION_ANCHORS
 
-## 落地后关键事实
-- financial repo: 0d3e9a2 v0.6.0 — cn_typo_scan +15 whitelist chars + year-tail guard; _shared.py; find_provenance_line_for best-match; slide_data_audit.py 新 gate; validate-delivery 集成 [2b]
-- lead repo: 14d9e48 v0.5.1 — paired bump（无 rule 变化）
-- ClawHub: aigroup-financial-services-openclaw@0.6.0 + aigroup-lead-discovery-openclaw@0.5.2 均 Latest
-- macmini: 装 0.6.0 / 0.5.1, SMOKE PASS
-- 新 gate slide_data_audit 实测找到 8 个 wuliangye + 多个 haitian 的 PPT-to-provenance 数据漂移（这是 gate 按设计工作，非 bug；交付 agent 之后若要 ship 需回去补 provenance 行或在 slide 上去掉这些数字）
-- 已知元数据 artifact: 5.1 和 0.5.2 两个 ClawHub tag 的 bundle 内 plugin.json 都是 '0.5.1' — re-publish 时 prepare_release_bundle 已读完新 plugin.json 但当时我先发 0.5.1 再 bump package.json, 流程错了顺序; 下轮干净做法是先 bump + 先 prepare + 再发
+## 横向汇总
+- **5 个公司都能 OVERALL PASS**（不同板块：银行/保险/医药/家电/动力电池）
+- **CITATION_ANCHORS 补丁**：加入 `中国基金报`、`界面新闻`、`中鹏信评`、`中诚信`、`联合资信`、`大公国际`、`上海证券报`、`证券日报`、`证券时报`、`雪球`、`派财经`、`时代周报` 等 T3/T4 高频引用源
+- **precision_scan 二次加固**：在 metric_key + int_part 基础上增加精度容差检查（`|a-b| ≤ 0.5*10^(-min_precision)`）。cross-year 同指标不同真值（如 `8.66% vs 9.47%`）因 diff 大于容差不再误报；同值不同精度（如 `1.34 / 1.340 / 1.3 元/股`）仍捕获。wuliangye 3.5/4.5 "洋河股份股息率" 被 reclassify 为数据冲突（不是精度漂移）—— 仍被 provenance_verify --strict L78 独立捕获，双重防线
+- [x] US-006 两个 bug 已 patch（_shared.py + verify_intelligence.py）；5 家回归全绿 + wuliangye + BYD 回归不退步
+
+- [ ] US-007 双仓 bump + publish + macmini

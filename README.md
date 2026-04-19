@@ -7,7 +7,7 @@ Financial modeling, analysis, and deliverables suite for OpenClaw. **Stable trac
 **Just want it running?** See [QUICKSTART.md](QUICKSTART.md) — 3 steps, preflight script, pitfall workarounds. The rest of this README is reference material.
 
 ```bash
-openclaw plugins install clawhub:aigroup-financial-services-openclaw@latest
+openclaw plugins install clawhub:aigroup-financial-services-openclaw
 launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway
 bash ~/.openclaw/extensions/aigroup-financial-services-openclaw/scripts/preflight.sh
 ```

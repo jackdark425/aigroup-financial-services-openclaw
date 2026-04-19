@@ -7,7 +7,7 @@
 
 ```bash
 # 1. Install via ClawHub (public, stable track)
-openclaw plugins install clawhub:aigroup-financial-services-openclaw@latest
+openclaw plugins install clawhub:aigroup-financial-services-openclaw
 
 # 2. Restart gateway to load the new skill set
 launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway
@@ -36,7 +36,7 @@ OpenClaw caches the ClawHub zip under `/var/folders/.../openclaw-clawhub-package
 
 ```bash
 find /var/folders -name "openclaw-clawhub-package-*" -type d 2>/dev/null | xargs rm -rf
-openclaw plugins install clawhub:aigroup-financial-services-openclaw@latest
+openclaw plugins install clawhub:aigroup-financial-services-openclaw
 ```
 
 If it still fails, add `--force` to the uninstall and retry from a clean slate:
@@ -44,7 +44,7 @@ If it still fails, add `--force` to the uninstall and retry from a clean slate:
 ```bash
 openclaw plugins uninstall aigroup-financial-services-openclaw --force
 find /var/folders -name "openclaw-clawhub-package-*" -type d 2>/dev/null | xargs rm -rf
-openclaw plugins install clawhub:aigroup-financial-services-openclaw@latest
+openclaw plugins install clawhub:aigroup-financial-services-openclaw
 ```
 
 ### OpenClaw safety scanner blocks install
@@ -60,7 +60,7 @@ If `openclaw agent --agent main --message "OK"` returns `provider: openrouter, m
 This plugin is the downstream half. For upstream client-intelligence install the paired plugin first:
 
 ```bash
-openclaw plugins install clawhub:aigroup-lead-discovery-openclaw@latest
+openclaw plugins install clawhub:aigroup-lead-discovery-openclaw
 ```
 
 See that repo's `QUICKSTART.md` for its own preflight.

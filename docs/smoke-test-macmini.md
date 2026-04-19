@@ -14,8 +14,8 @@ openclaw plugins uninstall aigroup-lead-discovery-openclaw --force 2>/dev/null
 find /var/folders -name "openclaw-clawhub-package-*" -type d 2>/dev/null | xargs rm -rf
 
 # Install upstream (lead-discovery) first, then downstream (financial-services)
-openclaw plugins install clawhub:aigroup-lead-discovery-openclaw@latest
-openclaw plugins install clawhub:aigroup-financial-services-openclaw@latest
+openclaw plugins install clawhub:aigroup-lead-discovery-openclaw
+openclaw plugins install clawhub:aigroup-financial-services-openclaw
 
 # Verify versions
 for p in aigroup-lead-discovery-openclaw aigroup-financial-services-openclaw; do

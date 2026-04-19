@@ -30,8 +30,10 @@ export PATH=/opt/homebrew/bin:/Users/jackdong/.npm-global/bin:$PATH
 openclaw plugins uninstall aigroup-financial-services-openclaw --force 2>/dev/null | tail -1
 openclaw plugins uninstall aigroup-lead-discovery-openclaw --force 2>/dev/null | tail -1
 find /var/folders -name "openclaw-clawhub-package-*" -type d 2>/dev/null | xargs rm -rf
-openclaw plugins install clawhub:aigroup-lead-discovery-openclaw@latest 2>&1 | tail -2
-openclaw plugins install clawhub:aigroup-financial-services-openclaw@latest 2>&1 | tail -2
+# ClawHub install does not accept @latest. Use the no-version form (resolves to
+# the registry latest bundle-plugin version on install) or pin to a specific tag.
+openclaw plugins install clawhub:aigroup-lead-discovery-openclaw 2>&1 | tail -2
+openclaw plugins install clawhub:aigroup-financial-services-openclaw 2>&1 | tail -2
 ' || EXIT=1
 
 section "2/5 · versions"

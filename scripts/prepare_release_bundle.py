@@ -14,6 +14,8 @@ INCLUDE_PATHS = [
     "skills",
     "commands",
     "scripts",
+    "docs",            # smoke-test-macmini.md + related user-facing docs
+    "QUICKSTART.md",   # 3-step macmini install guide (referenced from README)
     "README.md",
     "LICENSE",
     "NOTICE",

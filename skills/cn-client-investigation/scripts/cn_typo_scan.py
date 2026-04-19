@@ -84,12 +84,25 @@ def scan(text: str) -> list[tuple[int, str, str]]:
             #   well-known names   : 茅台五粮泸州洋河海天伊利美的格力比亚迪宁德蔚来 LVMH
             #   financial qualifiers: 高中低端 / 同比环比 / 首半全三四
             WHITELIST_LEADS = (
+                # measure / count qualifiers
                 "第共计超约近多"
+                # banker line-item leads (营收 净利 股价 市值 毛利率 …)
                 "营收净利股价市值毛利率润流"
+                # sector / industry leads
                 "白酒消费科技金融家电食品医药奢"
+                # known-brand leads (茅台 五粮 泸州 洋河 海天 伊利 美的 格力)
                 "茅台五粮泸州洋河海天伊利美的格力"
+                # frequent CN-text + number joiners observed in banker prose:
+                #   产 (年产/产 X 万吨), 破 (突破 X 亿), 液 (五粮液 1618 product-id),
+                #   能 (产能 X 万吨), 为 (为 2024-xx), 前 (前 X 名),
+                #   后 (后 X 年), 年/月/日 (年营收 X 亿 / 月产 X 万),
+                #   含 (含税 X 元)
+                "产破液能为前后年月日含"
+                # misc nouns that legitimately precede digits
                 "窖红额于指居金应在间售"
+                # frequency / ordinal / proportion qualifiers
                 "高中低同环比首半全三四两"
+                # foreign brand heads
                 "LVMH"
             )
             if m.group(0)[0] in WHITELIST_LEADS:

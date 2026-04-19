@@ -2,6 +2,17 @@
 
 Financial modeling, analysis, and deliverables suite for OpenClaw. **Stable track (0.2.0+).**
 
+## Quick Install (macmini)
+
+**Just want it running?** See [QUICKSTART.md](QUICKSTART.md) — 3 steps, preflight script, pitfall workarounds. The rest of this README is reference material.
+
+```bash
+openclaw plugins install clawhub:aigroup-financial-services-openclaw@latest
+launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway
+bash ~/.openclaw/extensions/aigroup-financial-services-openclaw/scripts/preflight.sh
+```
+
+
 AIGroup 自研 + 其他大厂开源能力整合版，用于把企业客户调查、金融分析、建模和交付物生成整合成一套可发布、可运行的 OpenClaw banker workflow。
 
 ## Stable vs Lab（0.2.0 开始分两条轨）

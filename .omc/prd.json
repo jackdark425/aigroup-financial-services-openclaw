@@ -1,102 +1,105 @@
 {
-  "prd_id": "finplugin-quality-hardening-20260418",
-  "title": "AIGroup 金融插件质量硬化 — MD 数据准确 + PPT 文字正确",
-  "goal": "确保 macmini OpenClaw main agent 通过 aigroup-financial-services-openclaw (stable) + aigroup-financial-services-openclaw-lab (private) 生成的 MD 底稿数据可溯源、PPT 成品无中文字符错位（寒武纪→宽厭谛79 / 核心→校虚 / 净利→洁利 等 MiniMax-M2.7 已观测 typo 模式）。",
+  "prd_id": "macmini-smooth-install-20260418-b",
+  "title": "macmini ClawHub 装双插件丝滑 + 数据质量强化 + 独立 audit agent",
+  "goal": "让 macmini main agent 通过 ClawHub 装 aigroup-financial-services-openclaw + aigroup-lead-discovery-openclaw 后 zero-friction 可用，交付质量三道 gate 整合为单入口，并新增 data-quality-audit skill 给 agent 独立跑交叉核实 + 常识异常检测。",
   "context": {
-    "observed_issues_20260418": [
-      "寒武纪 Cambricon v9 deck 出现 44 条 cn_typo_scan 红旗 hit（宽厭谛79 / 校虚 / 洁利贜务贜损 / 筹划 / 转映 / 艺瑞 / 棒品 等）",
-      "MD 底稿里硬数字（营收/估值/市值）部分没有 data-provenance 条目，无法 tracing",
-      "agent 在 T1 数据源（Tushare/CNINFO）失败时偶发 fabricate 数据而非标 N/A",
-      "现 ppt-deliverable / datapack-builder / dcf-model SKILL 没有引用 cn-client-investigation skill，CN 目标时 routing 不会自动激活"
-    ],
-    "stable_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw (public, @0.2.1)",
-    "lab_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw-lab (private)",
-    "deploy_target": "macmini via ClawHub bundle-plugin"
+    "prior_session_state": "本 session 之前已把 financial-services stable → 0.3.4, lead-discovery → 0.2.0, 两 public repo GitHub push + ClawHub publish + macmini 升级、茅台/五粮液端到端跑通三道 gate (verify_intelligence / cn_typo_scan / provenance_verify) 全 exit 0。但仍存在三类痛点：(a) ClawHub 装时 transient missing plugin.json 需要 workaround；(b) agent 跑三道 gate 要记三个不同脚本路径；(c) 无机械 cross-check — 单源数字过了 provenance gate 但值本身可能是 fabricated 或 source 抄错。",
+    "stable_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw (public @ 0.3.4)",
+    "lead_repo": "/Users/jackdark/claude/ai/aigroup-lead-discovery-openclaw (public @ 0.2.0)",
+    "deploy_target": "macmini via ClawHub; main agent on minimax-cn/MiniMax-M2.7"
   },
   "stories": [
     {
       "id": "US-001",
-      "title": "cn_typo_scan 从 optional 升级为 compile-time 强制 gate",
+      "title": "丝滑安装: QUICKSTART + preflight 脚本 (两仓)",
       "priority": 1,
       "passes": true,
       "acceptanceCriteria": [
-        "新建文件 skills/cn-client-investigation/scripts/compile_with_typo_gate.template.js — 可复制到 slides/compile.js 的 pptxgenjs compile 模板，生成 pptx 后自动 spawn `python-pptx 抽文本 + cn_typo_scan.py`，scan 返回非 0 时 node 进程 process.exit(1) 并打印 typo 列表到 stderr",
-        "cn-client-investigation/SKILL.md Rule 7 段落更新：明确指令 agent 用这个模板作为 compile.js 的基础，不许跳过 typo gate",
-        "cn_typo_scan.py 对一条人造坏文本（内含'宽厭谛79'）返回 exit 1 且 stderr 含具体 line + reason",
-        "cn_typo_scan.py 对一条人造干净文本（纯投行常用中文）返回 exit 0"
+        "aigroup-financial-services-openclaw/QUICKSTART.md 存在，含 3 条可直接 copy-paste 的 macmini ClawHub install 命令、必装 runtime deps 清单 (python3 + uvx + node>=18 + python-pptx + pptxgenjs)、已知 ClawHub transient-cache workaround (rm /var/folders/.../openclaw-clawhub-package-* + retry install)",
+        "aigroup-lead-discovery-openclaw/QUICKSTART.md 同结构",
+        "aigroup-financial-services-openclaw/scripts/preflight.sh 可执行，非交互运行，检查 python3 / uvx / node / python-pptx 是否可调用，缺任一项 exit 1 + stderr 清单",
+        "aigroup-lead-discovery-openclaw/scripts/preflight.sh 同 (只要求 python3 检查 + node 检查，因为 lead-discovery 不用 pptxgenjs)",
+        "两仓 README 顶部加 'Quick Install (macmini)' 小节，链接指向 QUICKSTART.md",
+        "preflight.sh 在本机 macOS 上实际 smoke 一次 exit 0（python3/uvx/node 都装了）"
       ],
-      "verification_method": "bash: 跑 scan script 两次分别用 bad/good 输入、check exit code + stderr"
+      "verification_method": "bash: cat QUICKSTART.md + ./scripts/preflight.sh"
     },
     {
       "id": "US-002",
-      "title": "cn-lexicon.js 覆盖率翻倍 + red-zone 锁字表",
+      "title": "单入口 validate-delivery.py 整合三道 gate",
       "priority": 2,
       "passes": true,
       "acceptanceCriteria": [
-        "cn-lexicon.js 总条目 >= 150（当前 ~80）",
-        "新增 LEXICON.red_zone 对象，key 为已观测 typo 词（宽厭/谛79/校虚/洁利/贜务/贜损/筹划/转映/艺瑞/棒品），value 为正确版本字面字符串（UTF-8 literal）",
-        "新增 LEXICON.industry_terms 涵盖 AI 芯片 / 半导体 / 新能源车 / 创新药 / SaaS 五个常见 banker 行业的核心术语，每个 >= 15 条",
-        "node 加载 lexicon 验证 module.exports 是 plain object 且 top-level key >= 6",
-        "cn_typo_scan.py 的 RED_FLAG_DYADS 列表 >= 10 条，其中至少 3 条是新加的（不在 20260418 初版中）"
+        "aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/validate-delivery.py 存在且可执行",
+        "接受参数 <deliverable_dir>，自动 find: *intelligence*.md → verify_intelligence；*.pptx → extract text + cn_typo_scan；analysis.md + data-provenance.md → provenance_verify",
+        "跨插件引用 verify_intelligence.py（lead-discovery 主包装后固定在 ~/.openclaw/extensions/aigroup-lead-discovery-openclaw/skills/cn-lead-safety/scripts/）",
+        "任一 gate fail → exit 1 + stderr 汇总报告指明哪道 gate 失败 + 失败原因",
+        "全 pass → exit 0 + stdout 汇总 '3/3 gates passed: verify_intelligence OK / cn_typo_scan OK / provenance_verify OK'",
+        "对 /tmp 下人造 bad deliverable（硬数字没 citation + 含宽厭 typo）exit 1；对 wuliangye-stable 真实 deliverable exit 0",
+        "cn-client-investigation/SKILL.md Phase 5 QA 更新，指引 agent 用 validate-delivery.py 单入口"
       ],
-      "verification_method": "node -e require + wc + grep + scan 再跑一次 Cambricon deck，hits 数 >= 44（覆盖不倒退）"
+      "verification_method": "scp 真实 wuliangye-stable + 人造 bad 两组目录，分别跑 validate-delivery.py 验 exit code"
     },
     {
       "id": "US-003",
-      "title": "MD 数据 provenance 强制校验脚本",
+      "title": "新 skill: data-quality-audit 独立审计 agent 调用",
       "priority": 3,
       "passes": true,
       "acceptanceCriteria": [
-        "新建 skills/cn-client-investigation/scripts/provenance_verify.py — 接受 MD 文件路径 + 对应 data-provenance.md 路径",
-        "脚本 regex 扫描 MD 里硬数字模式（\\d+(\\.\\d+)?\\s*(亿|万|%|RMB|USD|元|CNY|HKD|M|B|亿元)），每条硬数字 cross-check data-provenance.md 表格是否有对应条目",
-        "对一条人造 MD (含 3 个硬数字 + 2 条 provenance 表条目) 返回 exit 1 并报告 1 条缺失",
-        "对一条人造全对齐 MD（硬数字全有 provenance 条目）返回 exit 0",
-        "cn-client-investigation/SKILL.md Rule 5 更新：明确指令 Phase 5 QA 步骤必须跑 provenance_verify.py，不通过不算交付完成"
+        "lead-discovery repo 新 skills/data-quality-audit/SKILL.md 存在，description 含触发词 audit / 双核实 / 数据质量检查 / 交叉验证",
+        "SKILL.md 描述完整 audit 流程: (1) 读 data-provenance.md 抽硬数字 (2) 对每个数字调用 MCP 二次核实 (Tushare / 东方财富 / 巨潮 / FMP/Finnhub 的其中 ≥1 不同源) (3) diff > 5% 或源不可达 flag (4) 常识 check 按 YAML 规则 (5) 输出 audit-report.md",
+        "scripts/quality-audit.py 存在，读 data-provenance.md parse 每行硬数字到 JSON 结构",
+        "scripts/common-sense-rules.yaml 存在，至少 6 条规则 (毛利率<95% / 营收增速区间 / 员工数市值比 / 现金流 vs 净利一致性 / 市值 = 股价 × 股本 / 毛利 = 营收 × 毛利率)",
+        "SKILL.md 含完整 audit-report.md 输出模板 (PASS/FLAG/FAIL 分类、每项含: 指标名/MD 值/独立源值/diff%/结论)",
+        "对 wuliangye-stable 的 data-provenance.md 跑 quality-audit.py --parse-only，JSON 输出 ≥ 30 条硬数字条目解析正确"
       ],
-      "verification_method": "跑两次脚本，check exit code + stderr 报告"
+      "verification_method": "quality-audit.py --parse-only 抽 JSON 条目 + 读 SKILL.md/YAML 确认规则完整"
     },
     {
       "id": "US-004",
-      "title": "ppt-deliverable / dcf-model / datapack-builder 注入 CN routing",
+      "title": "macmini 端到端 install smoke 文档 + 脚本",
       "priority": 4,
       "passes": true,
       "acceptanceCriteria": [
-        "skills/ppt-deliverable/SKILL.md 在 '## Tooling preference' 之前加 '## CN target pre-flight' section（15-30 行），说明若 context 含'中国'/'A股'/'港股'/'科创板'/'创业板'/'北交所'/'中概股'/'H 股' 任一 → 必须先加载 cn-client-investigation skill 并遵循其 7 条 Rule",
-        "skills/dcf-model/SKILL.md 在 Step 1 '数据收集' 前新增 'Step 0.5: CN target check'，1 个段落告诉 agent 若目标 CN 则激活 cn-client-investigation Rule 4（数据源 tier）和 Rule 6（no fabrication）",
-        "skills/datapack-builder/SKILL.md 在 Phase 1 '文档处理' 之前同样新增 'Phase 0.5: CN target check' 段落",
-        "grep 'cn-client-investigation' 在这 3 个 SKILL.md 文件至少各出现 1 次"
+        "aigroup-financial-services-openclaw/docs/smoke-test-macmini.md 存在，含 fresh install → preflight → plugins list → ping agent 全流程 (markdown fenced bash code block 可 copy-paste)",
+        "文档覆盖: plugins.allow 配置、main agent workspace 路径要求 (~/.openclaw/workspace)、minimax-cn profile 校验、launchctl kickstart、ping main 看 skill visibility",
+        "aigroup-financial-services-openclaw/scripts/smoke-macmini.sh 存在可执行: 从本机 ssh jackmac-mini 跑 uninstall+install+preflight+plugins list+ping 一键 smoke，遇失败 exit 1",
+        "docs/smoke-test-macmini.md 含一条'触发 data-quality-audit 做自检'示例命令",
+        "smoke-macmini.sh 实际对 macmini 跑一次 exit 0"
       ],
-      "verification_method": "grep count + 人工读段落判断语义完整"
+      "verification_method": "运行 smoke-macmini.sh 观察 exit"
     },
     {
       "id": "US-005",
-      "title": "Lab 私仓 banker 禁用警告强化",
+      "title": "双仓 bump + push + ClawHub publish + macmini 升级 + 整体 verify",
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw-lab/README.md 顶部（title 下 1-5 行内）加 '⚠️ 警告：本仓库为探索版，输出不适用于 banker 对客户交付物' 字样（或等价中英文）",
-        "aigroup-econ-mcp-lab/README.md 新增 '## Known Quirks / Not Production' section，列出至少 5 条（panel_var entity_ids / synthetic_control donor pool / DML n<50 NaN / probit SE 巨大 / xgboost libomp dlopen）",
-        "aigroup-mdtopptx-mcp-lab/README.md 同样新增至少 5 条 quirks（下划线吞失 / 长 section 硬切 / 空 title 边界 / CJK 字符错位在 markdown parser / node_modules 需本地 install）",
-        "两个仓库 sub-README 各有 workaround 段落（至少 2 个 bullet per sub-bundle）",
-        "lab repo 新 commit + push 到 jackdark425/aigroup-financial-services-openclaw-lab private"
+        "aigroup-financial-services-openclaw 版本 0.3.4 → 0.4.0 (both package.json 和 .claude-plugin/plugin.json)",
+        "aigroup-lead-discovery-openclaw 版本 0.2.0 → 0.3.0",
+        "两仓各自 git commit + push origin main 成功",
+        "两仓 clawhub package publish --version 0.4.0 / 0.3.0 成功",
+        "macmini uninstall + install clawhub:aigroup-financial-services-openclaw@0.4.0 + clawhub:aigroup-lead-discovery-openclaw@0.3.0 成功",
+        "macmini 上 preflight.sh 对两仓均 exit 0",
+        "macmini ping main agent 可见 cn-client-investigation + cn-lead-safety + data-quality-audit 三 skill"
       ],
-      "verification_method": "grep 警告字样 + wc 段落 + git log 确认 push"
+      "verification_method": "ssh macmini grep version + ping agent JSON"
     },
     {
       "id": "US-006",
-      "title": "stable 0.3.0 发布 + macmini 升级验证 (实际 ship 0.3.1，0.3.0 被 OpenClaw safety scanner 拦 child_process; 语义等价)",
+      "title": "data-quality-audit 对 wuliangye deliverable 实测产 audit-report.md",
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "acceptanceCriteria": [
-        "stable 主仓 package.json + .claude-plugin/plugin.json 版本 bump 到 0.3.0",
-        "prepare_release_bundle.py 打包 validate 通过",
-        "git commit + push main 成功（HEAD 有 v0.3.0 标签或 commit msg 含 'v0.3.0'）",
-        "clawhub package publish --family bundle-plugin --version 0.3.0 成功",
-        "macmini uninstall + install 0.3.0 完成，~/.openclaw/extensions/aigroup-financial-services-openclaw/.claude-plugin/plugin.json version = 0.3.0",
-        "macmini 上 cn-client-investigation/scripts/cn_typo_scan.py 和 provenance_verify.py 可执行（chmod +x + 无 shebang 错）"
+        "命令 openclaw agent --agent main --message '对 ~/deliverables/wuliangye-stable 跑 data-quality-audit' 触发本 session 新 skill",
+        "agent 产出 ~/deliverables/wuliangye-stable/audit-report.md 存在",
+        "audit-report.md 含 PASS / FLAG / FAIL 三分类 section，至少覆盖 10 个硬数字条目",
+        "至少 1 条 cross-check 实际调第二源 (Tushare vs 东方财富 / FMP) 对齐",
+        "至少应用 1 条 common-sense-rules.yaml 规则（如毛利率合理范围）",
+        "审计完成后 agent 在 message 里给 final verdict (e.g. Overall PASS / OVERALL FLAG: 2 items / OVERALL FAIL: 1 item)"
       ],
-      "verification_method": "ssh macmini 跑 cat version + python3 脚本 --help"
+      "verification_method": "ssh macmini 读 audit-report.md + agent final message"
     }
   ],
-  "created_at": "2026-04-18T18:32:00+08:00"
+  "created_at": "2026-04-18T23:40:00+08:00"
 }

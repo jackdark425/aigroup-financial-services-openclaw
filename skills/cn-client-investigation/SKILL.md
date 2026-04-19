@@ -167,12 +167,25 @@ Route PPT generation through the unified `ppt-deliverable` → host MiniMax `sli
 2. Every `addText` call with Chinese content goes through the lexicon (require `./references/cn-lexicon.js` and reference `LEXICON.company_name` / `LEXICON.sections.finance` etc.) — agent must NOT inline-type long Chinese strings
 3. `compile.js` includes a post-write hook that calls `cn_typo_scan.py` on the generated PPTX. If any red-flag hits, abort compile and re-emit the offending slide.
 
-### Phase 5 — QA
+### Phase 5 — QA (用 `validate-delivery.py` 单入口)
 
-1. Run `python -m markitdown` + `cn_typo_scan.py`, must be clean.
-2. Data provenance table (`references/data-provenance.md`) must list ≥ 1 source per hard number. Sample 5 numbers and manually re-verify against the cited source.
-3. Sensitive items (未披露财务细节 / 估值倍数) must be labeled as "估算" / "illustrative" with caption if not from a T1-T2 source.
-4. Present final deck to the user with an "已知缺口 / 数据置信" 汇总 section at the appendix.
+**推荐一条命令跑完三道 gate**：
+
+```bash
+python3 ~/.openclaw/extensions/aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/validate-delivery.py \
+    /path/to/deliverable_dir
+# exit 0 → 3/3 PASS (verify_intelligence + cn_typo_scan + provenance_verify) 方可 ship
+# exit 1 → 至少一道 gate 失败，stderr 指出是哪道 + 具体行号 / 原因
+```
+
+这个 aggregator 自动按文件名 find：
+- `*intelligence*.md` → `verify_intelligence.py`（跨插件引用 lead-discovery 的 cn-lead-safety）
+- `*.pptx` → 自动 extract text + `cn_typo_scan.py`
+- `analysis.md` + `data-provenance.md` → `provenance_verify.py`
+
+Debug 单 gate 时仍可分别跑（见各自脚本）。额外手动 QA：
+1. Sensitive items（未披露财务细节 / 估值倍数）must 标 "估算" / "illustrative" with caption if not from T1-T2 source.
+2. Final deck 加 "已知缺口 / 数据置信" 汇总 section 到 appendix.
 
 ## Output standard
 

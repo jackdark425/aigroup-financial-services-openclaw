@@ -189,15 +189,166 @@ def verify(
     return len(missing), summary + missing
 
 
+# -----------------------------------------------------------------------------
+# Strict-mode additions (US-001 data-text-accuracy-20260419):
+#
+# Goal: catch the 海天味业 / 五粮液 failure mode where analysis.md claims a
+# number with an estimate marker (`~22.9%`, `约 1.34 元`, `估算 XXX`) yet the
+# companion data-provenance.md row attributes the value to a Tier-1 source
+# (Tushare / 巨潮 / 交易所 / East Money) — i.e. estimate-as-T1 smuggling.
+#
+# In strict mode, every hard number that sits within an estimate-marker
+# window MUST have its provenance row status/source cell contain one of
+# the derivation markers (`估算`, `推算`, `derived`, `computed`, `analyst
+# estimate`, `ESTIMATED`, `DERIVED`). Otherwise the scanner fails with a
+# line-level report.
+#
+# Strict mode also reports (as a WARN, not FAIL) when the same metric
+# appears at multiple precisions in the analysis markdown, because
+# precision drift is a correctness smell on its own (e.g. "22.9%" and
+# "22.92%" in different paragraphs for the same ROE figure).
+
+# Tokens that immediately flag a hard number as an agent estimate /
+# derivation rather than a verbatim source value. Case-sensitive for
+# ASCII tokens; Chinese are always case-literal anyway.
+ESTIMATE_MARKERS = (
+    "~",
+    "约",
+    "大约",
+    "估算",
+    "粗估",
+    "推算",
+    "approximately",
+    "approx.",
+    "est.",
+    "≈",
+)
+
+# Tokens that, if present in the provenance row that contains a matching
+# hard number, certify the value is INTENTIONALLY labelled as an agent-
+# derived value (so strict mode does NOT fail on it).
+DERIVATION_MARKERS = (
+    "估算",
+    "推算",
+    "derived",
+    "Derived",
+    "DERIVED",
+    "computed",
+    "Computed",
+    "analyst estimate",
+    "Analyst estimate",
+    "ESTIMATED",
+    "[ESTIMATED]",
+    "[DERIVED]",
+)
+
+
+def find_estimate_hits(analysis_text: str) -> list[tuple[int, str, str, str]]:
+    """Return [(lineno, number, unit, snippet), ...] for hard numbers that
+    sit within ~8 chars of an estimate marker on the same line."""
+    hits: list[tuple[int, str, str, str]] = []
+    for lineno, line in enumerate(analysis_text.splitlines(), 1):
+        for m in HARD_NUMBER.finditer(line):
+            win_start = max(0, m.start() - 8)
+            win_end = min(len(line), m.end() + 8)
+            window = line[win_start:win_end]
+            if any(tok in window for tok in ESTIMATE_MARKERS):
+                hits.append(
+                    (lineno, m.group(1), m.group(2), line.strip()[:120])
+                )
+    return hits
+
+
+def find_provenance_line_for(
+    provenance_text: str, num: str, unit: str
+) -> str | None:
+    """Return the first full line in provenance_text that contains this
+    number+unit (or a bare-number fallback). None if not found."""
+    needle = f"{num}{unit}"
+    needle_spaced = f"{num} {unit}"
+    for raw in provenance_text.splitlines():
+        if needle in raw or needle_spaced in raw:
+            return raw
+        # bare-number fallback
+        if num.replace(",", "") in raw and unit in raw:
+            return raw
+    return None
+
+
+def precision_scan(analysis_text: str) -> list[str]:
+    """Detect same-unit multi-precision writes across the doc.
+
+    Heuristic (simpler than the pre-context version — banker prose
+    reliably uses the same unit when citing the same metric, and
+    repeating a value at different precisions in the same document is
+    almost always precision drift not genuine distinct period data):
+    group all hard numbers by (rounded-integer-part, unit), then if any
+    group contains ≥ 2 distinct string forms (e.g. "1.34元/股" and
+    "1.340元/股" and "1.3元/股"), emit a drift warning. Period-distinct
+    values (e.g. "56.27 亿元" vs "83.27 亿元" for different years) round
+    to different integers and never collide.
+    """
+    import collections
+    # key = (int_part, unit)
+    groups: dict[tuple[int, str], set[str]] = collections.defaultdict(set)
+    for line in analysis_text.splitlines():
+        for m in HARD_NUMBER.finditer(line):
+            num_str, unit = m.group(1), m.group(2)
+            try:
+                n = float(num_str.replace(",", ""))
+            except ValueError:
+                continue
+            int_part = int(round(n))
+            groups[(int_part, unit)].add(f"{num_str}{unit}")
+    warnings: list[str] = []
+    for (int_part, unit), values in groups.items():
+        if len(values) < 2:
+            continue
+        warnings.append(
+            f"precision drift near {int_part}{unit}: {', '.join(sorted(values))}"
+        )
+    return warnings
+
+
+def strict_verify(
+    analysis_text: str, provenance_text: str
+) -> tuple[int, list[str], list[str]]:
+    """Return (strict_violation_count, violation_messages, precision_warnings)."""
+    est_hits = find_estimate_hits(analysis_text)
+    violations: list[str] = []
+    for lineno, num, unit, snippet in est_hits:
+        prov_line = find_provenance_line_for(provenance_text, num, unit)
+        if prov_line is None:
+            continue
+        has_derivation = any(tok in prov_line for tok in DERIVATION_MARKERS)
+        if not has_derivation:
+            violations.append(
+                f"L{lineno:>4}: hard number '{num}{unit}' has estimate marker in "
+                f"analysis but provenance row does NOT label it as estimated/derived"
+                f"\n       analysis:    {snippet!r}"
+                f"\n       provenance:  {prov_line.strip()[:140]!r}"
+                f"\n       fix: mark the provenance row source with "
+                f"[ESTIMATED] / [DERIVED] / 估算 / 推算, or resolve the "
+                f"analysis value to the exact source-returned value."
+            )
+    precision_warnings = precision_scan(analysis_text)
+    return len(violations), violations, precision_warnings
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) != 3:
+    strict = False
+    args = list(argv[1:])
+    if "--strict" in args:
+        strict = True
+        args.remove("--strict")
+    if len(args) != 2:
         print(
-            "usage: provenance_verify.py <analysis.md> <data-provenance.md>",
+            "usage: provenance_verify.py [--strict] <analysis.md> <data-provenance.md>",
             file=sys.stderr,
         )
         return 2
-    analysis_p = pathlib.Path(argv[1])
-    prov_p = pathlib.Path(argv[2])
+    analysis_p = pathlib.Path(args[0])
+    prov_p = pathlib.Path(args[1])
     for p in (analysis_p, prov_p):
         if not p.exists():
             print(f"file not found: {p}", file=sys.stderr)
@@ -208,13 +359,41 @@ def main(argv: list[str]) -> int:
     missing, messages = verify(analysis_text, prov_text)
     header = messages[0]
     details = messages[1:]
-    if missing == 0:
-        print(f"OK: {header}")
-        return 0
-    print(f"FAIL: {header}", file=sys.stderr)
-    for m in details:
-        print(m, file=sys.stderr)
-    return 1
+    base_fail = missing > 0
+
+    strict_fail = False
+    if strict:
+        s_count, s_msgs, s_warns = strict_verify(analysis_text, prov_text)
+        if s_count > 0:
+            strict_fail = True
+            print(
+                f"FAIL (--strict): {s_count} estimate-marker hard number(s) "
+                f"missing derivation label in provenance.",
+                file=sys.stderr,
+            )
+            for m in s_msgs:
+                print(m, file=sys.stderr)
+        if s_warns:
+            print(
+                f"WARN (--strict precision): {len(s_warns)} precision-drift "
+                f"group(s) detected (non-blocking):",
+                file=sys.stderr,
+            )
+            for w in s_warns:
+                print(f"  - {w}", file=sys.stderr)
+
+    if base_fail:
+        print(f"FAIL: {header}", file=sys.stderr)
+        for m in details:
+            print(m, file=sys.stderr)
+        return 1
+    if strict_fail:
+        return 1
+
+    print(f"OK: {header}")
+    if strict:
+        print("OK: --strict estimate-label check clean.")
+    return 0
 
 
 if __name__ == "__main__":

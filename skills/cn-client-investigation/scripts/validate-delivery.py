@@ -51,6 +51,7 @@ import sys
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 CN_TYPO_SCAN = SCRIPT_DIR / "cn_typo_scan.py"
 PROVENANCE_VERIFY = SCRIPT_DIR / "provenance_verify.py"
+STYLE_SCAN = SCRIPT_DIR / "style_scan.py"
 
 # verify_intelligence.py is in the paired lead-discovery plugin. Try a few
 # known locations in order. If none resolves, that gate is reported as
@@ -134,6 +135,16 @@ def main() -> int:
         description="Run all three CN banker delivery gates on a deliverable dir."
     )
     ap.add_argument("deliverable", help="Path to deliverable directory")
+    ap.add_argument(
+        "--strict",
+        action="store_true",
+        help="Pass --strict to provenance_verify (catches estimate-as-T1 smuggling).",
+    )
+    ap.add_argument(
+        "--style",
+        action="store_true",
+        help="Also run style_scan.py on analysis.md in warn-only mode (non-blocking).",
+    )
     args = ap.parse_args()
 
     d = pathlib.Path(args.deliverable).resolve()
@@ -219,16 +230,34 @@ def main() -> int:
             f"[3/3] provenance_verify    SKIPPED (missing: {', '.join(missing)})"
         )
     else:
-        rc, so, se = run_gate(PROVENANCE_VERIFY, [str(analysis), str(provenance)])
+        prov_args = [str(analysis), str(provenance)]
+        if args.strict:
+            prov_args.insert(0, "--strict")
+        rc, so, se = run_gate(PROVENANCE_VERIFY, prov_args)
         if rc != 0:
             overall_fail = 1
             print("  [fail] provenance_verify:", file=sys.stderr)
             if se.strip():
                 print("    " + se.strip().replace("\n", "\n    ")[:2000], file=sys.stderr)
-            summary.append("[3/3] provenance_verify    FAIL")
+            summary.append(
+                f"[3/3] provenance_verify    FAIL{' (--strict)' if args.strict else ''}"
+            )
         else:
-            print(f"  [ok] provenance_verify: {so.strip()}")
-            summary.append("[3/3] provenance_verify    OK")
+            print(f"  [ok] provenance_verify{' (--strict)' if args.strict else ''}: {so.strip()}")
+            if se.strip():
+                # strict mode may emit WARN on stderr even when exit 0
+                print("    " + se.strip().replace("\n", "\n    "))
+            summary.append(
+                f"[3/3] provenance_verify    OK{' (--strict)' if args.strict else ''}"
+            )
+
+    # -------- Optional Phase [4]: style_scan (warn-only) --------
+    if args.style and analysis.exists():
+        rc, so, se = run_gate(STYLE_SCAN, ["--warn-only", str(analysis)])
+        out = (so + se).strip()
+        if out:
+            print(f"  [style] {out.replace(chr(10), chr(10) + '    ')}")
+        summary.append("[4]   style_scan (opt)    WARN-ONLY (non-blocking)")
 
     # -------- Summary --------
     print()
@@ -241,6 +270,10 @@ def main() -> int:
         print("OVERALL: FAIL — at least one gate failed. Do NOT ship.", file=sys.stderr)
         return 1
     print("OVERALL: PASS — all applicable gates clean. Shippable.")
+    print(
+        "Next step: run data-quality-audit skill for independent cross-source "
+        "verification (strongly recommended before client delivery)."
+    )
     return 0
 
 

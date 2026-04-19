@@ -80,6 +80,19 @@ python3 skills/cn-client-investigation/scripts/provenance_verify.py \
     deliverable/data-provenance.md
 ```
 
+**Before shipping, also run in `--strict` mode.** Strict adds two additional checks on top of the baseline substring match:
+
+1. **Estimate-as-T1 smuggling** — if a hard number in `analysis.md` is adjacent to an estimate marker (`~`, `约`, `大约`, `估算`, `approximately`, `est.`, `粗估`, `推算`), the matching `data-provenance.md` row's source column MUST include at least one derivation keyword: `[ESTIMATED]` / `[DERIVED]` / `估算` / `推算` / `derived` / `computed` / `analyst estimate`. Otherwise the gate FAILs with the offending line number. This catches the common pattern where the agent writes `~22.9%` but marks the provenance row with a T1 source like "Tushare Pro income_all" — which looked fine under the baseline substring check but is semantically misleading (the T1 source did not return 22.9%; the agent derived it).
+2. **Precision drift (WARN, non-blocking)** — when the same rounded integer + unit appears with multiple precisions in the analysis (e.g. `1.34 元/股` vs `1.340 元/股` vs `1.3 元/股`), the gate emits a WARN so the agent can decide whether the differing precisions are intentional (e.g. pre vs post restatement with footnote) or a typo.
+
+```bash
+python3 skills/cn-client-investigation/scripts/provenance_verify.py --strict \
+    deliverable/analysis.md \
+    deliverable/data-provenance.md
+```
+
+Non-strict mode behavior is unchanged — `--strict` is additive and opt-in.
+
 Every banker deliverable MUST include a `data-provenance.md` file at the deliverable root. Use the template under `references/data-sources.md` as the starting shape. Fill in one row per hard number with: 指标 / 数值 / 单位 / 期间 / Tier / 源 / URL 或工具 / 取数时间 / 交叉验证状态.
 
 ### Rule 6 — No fabrication on missing data (data accuracy)
@@ -173,19 +186,25 @@ Route PPT generation through the unified `ppt-deliverable` → host MiniMax `sli
 
 ```bash
 python3 ~/.openclaw/extensions/aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/validate-delivery.py \
+    --strict --style \
     /path/to/deliverable_dir
-# exit 0 → 3/3 PASS (verify_intelligence + cn_typo_scan + provenance_verify) 方可 ship
+# exit 0 → 3/3 PASS (verify_intelligence + cn_typo_scan + provenance_verify) + optional style_scan WARN-only
 # exit 1 → 至少一道 gate 失败，stderr 指出是哪道 + 具体行号 / 原因
 ```
 
 这个 aggregator 自动按文件名 find：
 - `*intelligence*.md` → `verify_intelligence.py`（跨插件引用 lead-discovery 的 cn-lead-safety）
 - `*.pptx` → 自动 extract text + `cn_typo_scan.py`
-- `analysis.md` + `data-provenance.md` → `provenance_verify.py`
+- `analysis.md` + `data-provenance.md` → `provenance_verify.py`（`--strict` 开启 estimate-as-T1 smuggling 检测 + 精度漂移 WARN）
+- 可选 `--style` → `style_scan.py --warn-only` 对 analysis.md 扫货币/期间/日期/YoY 术语一致性（非阻塞）
 
 Debug 单 gate 时仍可分别跑（见各自脚本）。额外手动 QA：
 1. Sensitive items（未披露财务细节 / 估值倍数）must 标 "估算" / "illustrative" with caption if not from T1-T2 source.
 2. Final deck 加 "已知缺口 / 数据置信" 汇总 section 到 appendix.
+
+**强烈建议：validate-delivery PASS 之后，交付客户之前，再跑一次 `data-quality-audit` skill**（在 paired plugin `aigroup-lead-discovery-openclaw` 中）做独立交叉源验证。Layer 1 的三道 upstream gate 只能校验交付形式合规性（硬数字有溯源 / 不含 typo / estimate 标注规范），但**数据语义正确性**（pre vs post restatement / ROE 口径 / 股价基准）需要独立二源拉取数据来打分 —— 这是 `data-quality-audit` 的职责。validate-delivery 在 overall PASS 时会自动在 stdout 尾部打印 "Next step: run data-quality-audit skill …" 提示。
+
+海天味业 2026-04-19 的 audit 就是一例：三道 upstream gate 全绿，但 data-quality-audit 抓到 EPS 2022 pre/post-restatement FAIL（1.34 vs 1.11 差 20.7%）。现在 `--strict` 模式 + `restatement_aware` 规则已把这一类问题部分上移到 Layer 1，但完整的 pre/post 版本识别仍需 Layer 3 独立拉数对比。
 
 ## Output standard
 

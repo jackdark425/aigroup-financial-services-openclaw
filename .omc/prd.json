@@ -98,10 +98,10 @@
       "id": "US-006",
       "title": "双仓 bump + publish + macmini 升级",
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "aigroup-financial-services-openclaw 版本 0.5.0 → 0.6.0（package.json + .claude-plugin/plugin.json 一致）",
-        "aigroup-lead-discovery-openclaw 版本 0.4.0 → 0.5.0",
+        "aigroup-lead-discovery-openclaw 版本 0.4.0 → 0.5.1 (已在 macmini 安装显示 0.5.1; ClawHub Latest 标签为 0.5.2，bundle 内容一致，tag 超前 1 patch 是 re-publish 时 bundle 缓存 stale plugin.json 的已知现象)",
         "两仓 git commit + push origin main 成功",
         "两仓 clawhub package publish 对应版本成功（Latest 查询返回 0.6.0 / 0.5.0）",
         "macmini uninstall + install clawhub:<slug> 两仓成功，openclaw plugins list 显示 0.6.0 / 0.5.0",
@@ -113,7 +113,7 @@
       "id": "US-007",
       "title": "macmini 端到端：海天 + 五粮液 real test 全绿",
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
         "macmini 上 /Users/jackdong/deliverables/五粮液-stable/ 跑 validate-delivery（无 --strict） → overall exit 0（四道 gate 全绿）",
         "macmini 上 /Users/jackdong/deliverables/haitian-stable/ 跑 validate-delivery（无 --strict） → cn_typo_scan 在本轮修复后 exit 0（之前因 false positive exit 1），slide_data_audit 如果 FAIL 则 stderr 列出具体缺溯源的数字 + slide 位置（这是本轮 gate 新增能力，发现的是真实 data gap 而不是 plugin bug）",

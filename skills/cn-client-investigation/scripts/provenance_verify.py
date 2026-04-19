@@ -43,6 +43,10 @@ from _shared import find_precision_drift
 # --- Regex: the hard-number pattern we flag ---
 # A digit run (with optional decimal) followed (possibly after one space)
 # by one of the banker units below.
+# NOTE: `HARD_NUMBER` + `normalize_variants` + `extract_provenance_corpus`
+# are also imported by slide_data_audit.py to keep matching semantics
+# consistent between analysis.md and .pptx slide gates. Changing the
+# regex here propagates to both scanners by design.
 UNITS = r"(?:亿元|亿|万|%|元|RMB|USD|CNY|HKD|M|B)"
 # Allow any digit run (no 3-cap) so "1500亿元" captures as 1500, not 500.
 # Thousands separators are still handled by the optional `(?:,\d{3})*` group.

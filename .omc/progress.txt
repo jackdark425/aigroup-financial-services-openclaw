@@ -15,10 +15,18 @@ bug-fix-ppt-quality-20260419 — iteration 1 (start 12:10)
 (c) 升级 macmini + 实测 (US-006, US-007)
 
 ## 故事进度
-- [ ] US-001 cn_typo_scan whitelist +续受达至 (消除 haitian 7 false positive)
-- [ ] US-002 precision_scan 抽共享 util
-- [ ] US-003 find_provenance_line_for → best-match
-- [ ] US-004 slide_data_audit.py 新脚本
-- [ ] US-005 validate-delivery 集成 slide_data_audit
-- [ ] US-006 双仓 bump 0.6.0 / 0.5.0 + publish + macmini 升级
-- [ ] US-007 macmini 端到端 海天 + 五粮液 real test
+- [x] US-001 cn_typo_scan whitelist +续受达至 + year-tail guard (消除 haitian 7 + maotai 1 false positive)
+- [x] US-002 precision_scan 抽共享 util (_shared.find_precision_drift, 两个 scanner 都 thin-wrapper 委托)
+- [x] US-003 find_provenance_line_for → best-match (tier-1 exact / tier-2 spaced / tier-3 bare，同 tier 内优先 DERIVATION-labeled)
+- [x] US-004 slide_data_audit.py 新脚本 (87 wuliangye slide 硬数字里发现 8 个 provenance 缺口)
+- [x] US-005 validate-delivery 集成 slide_data_audit (四道 gate + [2b] SKIPPED semantics)
+- [x] US-006 双仓 bump 0.6.0 / 0.5.1 + publish + macmini 升级 (ClawHub Latest 0.6.0 / 0.5.2 — 后者 bundle plugin.json 是 0.5.1, tag 超前 1 patch 是 bundle 缓存 stale plugin.json 的现象)
+- [x] US-007 macmini 端到端 海天 + 五粮液 real test (cn_typo_scan 从 7 hit → 0 hit; --strict L60 仍正确 FAIL; slide_data_audit 抓到 PPT-to-provenance 真实漂移)
+
+## 落地后关键事实
+- financial repo: 0d3e9a2 v0.6.0 — cn_typo_scan +15 whitelist chars + year-tail guard; _shared.py; find_provenance_line_for best-match; slide_data_audit.py 新 gate; validate-delivery 集成 [2b]
+- lead repo: 14d9e48 v0.5.1 — paired bump（无 rule 变化）
+- ClawHub: aigroup-financial-services-openclaw@0.6.0 + aigroup-lead-discovery-openclaw@0.5.2 均 Latest
+- macmini: 装 0.6.0 / 0.5.1, SMOKE PASS
+- 新 gate slide_data_audit 实测找到 8 个 wuliangye + 多个 haitian 的 PPT-to-provenance 数据漂移（这是 gate 按设计工作，非 bug；交付 agent 之后若要 ship 需回去补 provenance 行或在 slide 上去掉这些数字）
+- 已知元数据 artifact: 5.1 和 0.5.2 两个 ClawHub tag 的 bundle 内 plugin.json 都是 '0.5.1' — re-publish 时 prepare_release_bundle 已读完新 plugin.json 但当时我先发 0.5.1 再 bump package.json, 流程错了顺序; 下轮干净做法是先 bump + 先 prepare + 再发

@@ -163,10 +163,10 @@ def main() -> int:
     intel_files = sorted(glob.glob(str(d / "*intelligence*.md")))
     verify_script = find_verify_intelligence()
     if not intel_files:
-        summary.append("[1/3] verify_intelligence  SKIPPED (no *intelligence*.md in dir)")
+        summary.append("[1/4] verify_intelligence  SKIPPED (no *intelligence*.md in dir)")
     elif not verify_script:
         summary.append(
-            "[1/3] verify_intelligence  SKIPPED (aigroup-lead-discovery-openclaw not installed; "
+            "[1/4] verify_intelligence  SKIPPED (aigroup-lead-discovery-openclaw not installed; "
             "paired plugin provides the script)"
         )
     else:
@@ -181,7 +181,7 @@ def main() -> int:
             else:
                 print(f"  [ok] verify_intelligence on {pathlib.Path(f).name}: {so.strip()}")
         summary.append(
-            f"[1/3] verify_intelligence  {'OK' if all_ok else 'FAIL'} "
+            f"[1/4] verify_intelligence  {'OK' if all_ok else 'FAIL'} "
             f"({len(intel_files)} intelligence file(s))"
         )
         if not all_ok:
@@ -190,7 +190,7 @@ def main() -> int:
     # -------- Gate 2: cn_typo_scan on each *.pptx --------
     pptx_files = sorted(glob.glob(str(d / "*.pptx")))
     if not pptx_files:
-        summary.append("[2/3] cn_typo_scan         SKIPPED (no .pptx in dir)")
+        summary.append("[2/4] cn_typo_scan         SKIPPED (no .pptx in dir)")
     else:
         all_ok = True
         for p in pptx_files:
@@ -212,7 +212,7 @@ def main() -> int:
             except OSError:
                 pass
         summary.append(
-            f"[2/3] cn_typo_scan         {'OK' if all_ok else 'FAIL'} "
+            f"[2/4] cn_typo_scan         {'OK' if all_ok else 'FAIL'} "
             f"({len(pptx_files)} pptx file(s))"
         )
         if not all_ok:
@@ -255,7 +255,7 @@ def main() -> int:
         if not provenance.exists():
             missing.append("data-provenance.md")
         summary.append(
-            f"[3/3] provenance_verify    SKIPPED (missing: {', '.join(missing)})"
+            f"[3/4] provenance_verify    SKIPPED (missing: {', '.join(missing)})"
         )
     else:
         prov_args = [str(analysis), str(provenance)]
@@ -268,7 +268,7 @@ def main() -> int:
             if se.strip():
                 print("    " + se.strip().replace("\n", "\n    ")[:2000], file=sys.stderr)
             summary.append(
-                f"[3/3] provenance_verify    FAIL{' (--strict)' if args.strict else ''}"
+                f"[3/4] provenance_verify    FAIL{' (--strict)' if args.strict else ''}"
             )
         else:
             print(f"  [ok] provenance_verify{' (--strict)' if args.strict else ''}: {so.strip()}")
@@ -276,7 +276,7 @@ def main() -> int:
                 # strict mode may emit WARN on stderr even when exit 0
                 print("    " + se.strip().replace("\n", "\n    "))
             summary.append(
-                f"[3/3] provenance_verify    OK{' (--strict)' if args.strict else ''}"
+                f"[3/4] provenance_verify    OK{' (--strict)' if args.strict else ''}"
             )
 
     # -------- Optional Phase [4]: style_scan (warn-only) --------

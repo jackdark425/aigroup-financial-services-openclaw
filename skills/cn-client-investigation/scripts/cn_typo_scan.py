@@ -80,14 +80,8 @@ def scan(text: str) -> list[tuple[int, str, str]]:
             # "would a 2024-era banker deck ever write this char + a digit
             # literally, without it being an escape-drift typo?" Keep this
             # list conservative and add to it only when a real deliverable
-            # produces a clear false-positive.
-            #
-            # Groups:
-            #   measure / count    : 第共计超约近多 (S 第1，共100，约200)
-            #   line-item leads    : 营收净利股价市值毛利净利率 (营收 200 亿)
-            #   ticker / sector    : 白酒消费科技金融家电食品医药
-            #   well-known names   : 茅台五粮泸州洋河海天伊利美的格力比亚迪宁德蔚来 LVMH
-            #   financial qualifiers: 高中低端 / 同比环比 / 首半全三四
+            # produces a clear false-positive. See per-group comments below
+            # for semantics + real-world examples.
             WHITELIST_LEADS = (
                 # measure / count qualifiers
                 "第共计超约近多"

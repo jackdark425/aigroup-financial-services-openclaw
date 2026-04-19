@@ -1,105 +1,113 @@
 {
-  "prd_id": "macmini-smooth-install-20260418-b",
-  "title": "macmini ClawHub 装双插件丝滑 + 数据质量强化 + 独立 audit agent",
-  "goal": "让 macmini main agent 通过 ClawHub 装 aigroup-financial-services-openclaw + aigroup-lead-discovery-openclaw 后 zero-friction 可用，交付质量三道 gate 整合为单入口，并新增 data-quality-audit skill 给 agent 独立跑交叉核实 + 常识异常检测。",
+  "prd_id": "data-text-accuracy-20260419",
+  "title": "全面提升数据准确性 + 文字表述准确性（由海天味业 audit FAIL 驱动）",
+  "goal": "让 CN banker 交付在三道 upstream gate (verify_intelligence / cn_typo_scan / provenance_verify) 直接拦住：(a) 估算值冒充 T1 披露 (b) pre-restatement vs post-restatement 数据混用 (c) 数字/口径/单位表达不一致。这些是 data-quality-audit 之前能抓到但上游 gate 放过去的问题；现在把规则上移，让上游 gate 本身就拦住。",
   "context": {
-    "prior_session_state": "本 session 之前已把 financial-services stable → 0.3.4, lead-discovery → 0.2.0, 两 public repo GitHub push + ClawHub publish + macmini 升级、茅台/五粮液端到端跑通三道 gate (verify_intelligence / cn_typo_scan / provenance_verify) 全 exit 0。但仍存在三类痛点：(a) ClawHub 装时 transient missing plugin.json 需要 workaround；(b) agent 跑三道 gate 要记三个不同脚本路径；(c) 无机械 cross-check — 单源数字过了 provenance gate 但值本身可能是 fabricated 或 source 抄错。",
-    "stable_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw (public @ 0.3.4)",
-    "lead_repo": "/Users/jackdark/claude/ai/aigroup-lead-discovery-openclaw (public @ 0.2.0)",
-    "deploy_target": "macmini via ClawHub; main agent on minimax-cn/MiniMax-M2.7"
+    "driving_findings": [
+      "海天味业 audit 2026-04-19: OVERALL FLAG — 1 FAIL + 2 FLAG",
+      "  FAIL: EPS 2022 1.34元（pre-restatement）vs 东方财富年报 1.11元（post-restatement），差 20.7%。analysis.md 和 slide-14 都用了旧值，3 道 upstream gate 全绿。",
+      "  FLAG: 股价 37.68元 vs East Money kline 35.60元，差 5.84%。可能是昨日收盘 vs 当日基准。",
+      "  FLAG: ROE 2023 ~22.9%（粗估 = 净利/营收）vs 年报加权平均 20.72%。粗估是 NI/Revenue，不是 ROE；字段口径错。",
+      "五粮液 audit 2026-04-18: OVERALL FLAG — 2 items (ROE 22%→25.06%, 净利率 36%→37.85%)，同源: agent 用 `~` 前缀表示估算但 provenance 行标注为 T1 Tushare，mechanically 过了 provenance_verify 的 substring match 测试。",
+      "这些问题共同根源：agent 用粗估/推算数字 (~22.9% / ~36%)，但 provenance 行 source 字段却标 T1；或者用 pre-restatement 值但不标明；或者口径错 (NI/Revenue != ROE)。"
+    ],
+    "stable_repo": "/Users/jackdark/claude/ai/aigroup-financial-services-openclaw (public @ 0.4.1)",
+    "lead_repo": "/Users/jackdark/claude/ai/aigroup-lead-discovery-openclaw (public @ 0.3.2)",
+    "prev_session_commits": "financial @ 227bf2f, lead @ 53b70f5"
   },
   "stories": [
     {
       "id": "US-001",
-      "title": "丝滑安装: QUICKSTART + preflight 脚本 (两仓)",
+      "title": "provenance_verify --strict: 拦 estimate-as-T1 + 口径不清",
       "priority": 1,
       "passes": true,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw/QUICKSTART.md 存在，含 3 条可直接 copy-paste 的 macmini ClawHub install 命令、必装 runtime deps 清单 (python3 + uvx + node>=18 + python-pptx + pptxgenjs)、已知 ClawHub transient-cache workaround (rm /var/folders/.../openclaw-clawhub-package-* + retry install)",
-        "aigroup-lead-discovery-openclaw/QUICKSTART.md 同结构",
-        "aigroup-financial-services-openclaw/scripts/preflight.sh 可执行，非交互运行，检查 python3 / uvx / node / python-pptx 是否可调用，缺任一项 exit 1 + stderr 清单",
-        "aigroup-lead-discovery-openclaw/scripts/preflight.sh 同 (只要求 python3 检查 + node 检查，因为 lead-discovery 不用 pptxgenjs)",
-        "两仓 README 顶部加 'Quick Install (macmini)' 小节，链接指向 QUICKSTART.md",
-        "preflight.sh 在本机 macOS 上实际 smoke 一次 exit 0（python3/uvx/node 都装了）"
+        "aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/provenance_verify.py 增加 --strict flag",
+        "strict mode 下: analysis.md 中的硬数字如果**紧邻**有 estimate marker (`~`, `约`, `大约`, `估算`, `approximately`, `est.`, `粗估`, `推算`)，则对应 provenance.md 行 status/source 列必须**显式**包含 '估算' / 'derived' / 'computed' / 'analyst estimate' / '推算' 关键词之一；否则 FAIL 并在 stderr 列出冲突行号",
+        "strict mode 下: 同一指标若 MD 里出现多次不同精度写法（`22.9%` vs `22.92%` vs `~22.9%`），scanner 在 stderr 汇总 'precision inconsistency detected on metric <name>' (WARN not FAIL，方便 agent self-review)",
+        "对人造样本：MD 含 `~22.9%` + provenance 行标 'Tushare Pro income_all' → --strict 返回 exit 1 + 具体 L<n> 报告",
+        "对人造样本：MD 含 `22.92%` + provenance 行标 'Tushare Pro' → --strict 返回 exit 0",
+        "对人造样本：MD 含 `~22.9%` + provenance 行标 'agent 推算 (derived: NI/Revenue)' → --strict 返回 exit 0",
+        "非 --strict 模式行为完全不变（backward-compatible）：现有 34 硬数字 wuliangye deliverable exit 0 不退步",
+        "SKILL.md Rule 5 更新: 交付前用 --strict 跑 provenance_verify"
       ],
-      "verification_method": "bash: cat QUICKSTART.md + ./scripts/preflight.sh"
+      "verification_method": "构造 3 个样本对 + wuliangye 回归"
     },
     {
       "id": "US-002",
-      "title": "单入口 validate-delivery.py 整合三道 gate",
+      "title": "common-sense-rules: restatement_vs_original + 口径规范性",
       "priority": 2,
       "passes": true,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/validate-delivery.py 存在且可执行",
-        "接受参数 <deliverable_dir>，自动 find: *intelligence*.md → verify_intelligence；*.pptx → extract text + cn_typo_scan；analysis.md + data-provenance.md → provenance_verify",
-        "跨插件引用 verify_intelligence.py（lead-discovery 主包装后固定在 ~/.openclaw/extensions/aigroup-lead-discovery-openclaw/skills/cn-lead-safety/scripts/）",
-        "任一 gate fail → exit 1 + stderr 汇总报告指明哪道 gate 失败 + 失败原因",
-        "全 pass → exit 0 + stdout 汇总 '3/3 gates passed: verify_intelligence OK / cn_typo_scan OK / provenance_verify OK'",
-        "对 /tmp 下人造 bad deliverable（硬数字没 citation + 含宽厭 typo）exit 1；对 wuliangye-stable 真实 deliverable exit 0",
-        "cn-client-investigation/SKILL.md Phase 5 QA 更新，指引 agent 用 validate-delivery.py 单入口"
+        "aigroup-lead-discovery-openclaw/skills/data-quality-audit/references/common-sense-rules.yaml 新增 rule `restatement_aware`: 若指标 ∈ {EPS, 归母净利润, BPS, 毛利率, 净资产, 营业收入} 且交叉验证第二源返回值 diff > 10%，flag 并提示 'possible pre-restatement vs post-restatement mismatch — verify XBRL final version'",
+        "新增 rule `roe_definition_check`: 若 ROE 声明的数值 = 净利润 / 营收 (简单比值)，flag 为 'ROE 口径错 — ROE 应为 净利润 / 平均净资产，不是 净利率'",
+        "新增 rule `price_basis_check`: 若股价 diff > 3% vs 第二源，flag 'price basis drift — 核对 T+0 收盘 vs T-1 vs 最新报价口径'",
+        "SKILL.md audit workflow Step 4 更新: 明确列举 restatement-aware fields + 推荐对这些字段优先 cross-check 交易所 XBRL 最终版",
+        "YAML 总规则数 ≥ 13 条（原 10 + 新 3）",
+        "quality-audit.py --parse-only 对扩展后 YAML 能正常 load（node 或 python 读取无 parse error）"
       ],
-      "verification_method": "scp 真实 wuliangye-stable + 人造 bad 两组目录，分别跑 validate-delivery.py 验 exit code"
+      "verification_method": "cat YAML + count rules + python yaml.safe_load"
     },
     {
       "id": "US-003",
-      "title": "新 skill: data-quality-audit 独立审计 agent 调用",
+      "title": "新 scanner style_scan.py — 数字/单位/术语/日期一致性",
       "priority": 3,
       "passes": true,
       "acceptanceCriteria": [
-        "lead-discovery repo 新 skills/data-quality-audit/SKILL.md 存在，description 含触发词 audit / 双核实 / 数据质量检查 / 交叉验证",
-        "SKILL.md 描述完整 audit 流程: (1) 读 data-provenance.md 抽硬数字 (2) 对每个数字调用 MCP 二次核实 (Tushare / 东方财富 / 巨潮 / FMP/Finnhub 的其中 ≥1 不同源) (3) diff > 5% 或源不可达 flag (4) 常识 check 按 YAML 规则 (5) 输出 audit-report.md",
-        "scripts/quality-audit.py 存在，读 data-provenance.md parse 每行硬数字到 JSON 结构",
-        "scripts/common-sense-rules.yaml 存在，至少 6 条规则 (毛利率<95% / 营收增速区间 / 员工数市值比 / 现金流 vs 净利一致性 / 市值 = 股价 × 股本 / 毛利 = 营收 × 毛利率)",
-        "SKILL.md 含完整 audit-report.md 输出模板 (PASS/FLAG/FAIL 分类、每项含: 指标名/MD 值/独立源值/diff%/结论)",
-        "对 wuliangye-stable 的 data-provenance.md 跑 quality-audit.py --parse-only，JSON 输出 ≥ 30 条硬数字条目解析正确"
+        "aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/style_scan.py 存在可执行",
+        "扫 MD: 同一数值指标在不同段落精度不一致（`1.34` vs `1.3` vs `1.340`）→ WARN",
+        "扫 MD: 货币单位混用（同段落同时出现 `亿元` 和 `万元` 不加显式换算）→ WARN",
+        "扫 MD: 期间术语混用（同段落同时 `Q3` 和 `三季度` 指代同一期间）→ WARN",
+        "扫 MD: 同比增速术语混用（同段落同时 `YoY` 和 `同比`）→ WARN",
+        "扫 MD: 日期格式不一（同份文档同时 `2024-10-27` / `2024/10/27` / `2024年10月27日`）→ WARN",
+        "exit 0 if all clean, exit 1 if any WARN（方便 CI 集成），但默认 --warn-only flag 让 exit 恒为 0 仅输出报告",
+        "对 wuliangye analysis.md 跑 --warn-only 返回风格报告（可能有或无 WARN，但不 crash）",
+        "集成: validate-delivery.py 加 optional Phase [4] --style 跑 style_scan（默认 warn-only 模式，不阻塞 exit 0）"
       ],
-      "verification_method": "quality-audit.py --parse-only 抽 JSON 条目 + 读 SKILL.md/YAML 确认规则完整"
+      "verification_method": "人造 style-broken MD 样本 + wuliangye real MD smoke"
     },
     {
       "id": "US-004",
-      "title": "macmini 端到端 install smoke 文档 + 脚本",
+      "title": "validate-delivery 输出建议 data-quality-audit + 交付清单标 estimate",
       "priority": 4,
       "passes": true,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw/docs/smoke-test-macmini.md 存在，含 fresh install → preflight → plugins list → ping agent 全流程 (markdown fenced bash code block 可 copy-paste)",
-        "文档覆盖: plugins.allow 配置、main agent workspace 路径要求 (~/.openclaw/workspace)、minimax-cn profile 校验、launchctl kickstart、ping main 看 skill visibility",
-        "aigroup-financial-services-openclaw/scripts/smoke-macmini.sh 存在可执行: 从本机 ssh jackmac-mini 跑 uninstall+install+preflight+plugins list+ping 一键 smoke，遇失败 exit 1",
-        "docs/smoke-test-macmini.md 含一条'触发 data-quality-audit 做自检'示例命令",
-        "smoke-macmini.sh 实际对 macmini 跑一次 exit 0"
+        "validate-delivery.py 在所有 gate PASS 时 stdout 末尾追加 'Next step: run data-quality-audit skill for independent cross-source verification (strongly recommended before client delivery).'",
+        "SKILL.md cn-client-investigation Phase 5 明确: validate-delivery PASS 后，**强烈建议**触发 data-quality-audit（不强制，因该 skill 在 lead-discovery repo，可选启用）",
+        "data-provenance.md 模板（references/data-sources.md）新增指南: 若指标为**估算值**，source 字段必须以 `[ESTIMATED]` 或 `[DERIVED]` 前缀开头，明确标注; 重述敏感字段（EPS 等）必须注明 pre/post-restatement 并给出 XBRL 版本号或年报版本日期",
+        "references/data-sources.md 含至少 3 条关于 estimate / restatement / price-basis 的明确写作规范"
       ],
-      "verification_method": "运行 smoke-macmini.sh 观察 exit"
+      "verification_method": "grep 文档 + validate-delivery 输出最后一行"
     },
     {
       "id": "US-005",
-      "title": "双仓 bump + push + ClawHub publish + macmini 升级 + 整体 verify",
+      "title": "双仓 bump + push + ClawHub publish + macmini 升级",
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
-        "aigroup-financial-services-openclaw 版本 0.3.4 → 0.4.0 (both package.json 和 .claude-plugin/plugin.json)",
-        "aigroup-lead-discovery-openclaw 版本 0.2.0 → 0.3.0",
-        "两仓各自 git commit + push origin main 成功",
-        "两仓 clawhub package publish --version 0.4.0 / 0.3.0 成功",
-        "macmini uninstall + install clawhub:aigroup-financial-services-openclaw@0.4.0 + clawhub:aigroup-lead-discovery-openclaw@0.3.0 成功",
-        "macmini 上 preflight.sh 对两仓均 exit 0",
-        "macmini ping main agent 可见 cn-client-investigation + cn-lead-safety + data-quality-audit 三 skill"
+        "aigroup-financial-services-openclaw 版本 0.4.1 → 0.5.0",
+        "aigroup-lead-discovery-openclaw 版本 0.3.2 → 0.4.0",
+        "两仓 git commit + push origin main 成功",
+        "两仓 clawhub package publish 对应版本成功 (Latest 查询返回 0.5.0 / 0.4.0)",
+        "macmini uninstall + install clawhub:<slug> 两仓成功，extensions/ 下 plugin.json 版本一致",
+        "smoke-macmini.sh 最终 SMOKE PASS (provider minimax-cn/MiniMax-M2.7 + 5 skill visible)",
+        "macmini 上新脚本可执行: style_scan.py 和 provenance_verify.py --strict"
       ],
-      "verification_method": "ssh macmini grep version + ping agent JSON"
+      "verification_method": "ssh macmini grep version + smoke + 直接 python3 试跑 --strict"
     },
     {
       "id": "US-006",
-      "title": "data-quality-audit 对 wuliangye deliverable 实测产 audit-report.md",
+      "title": "实测: 对 海天 deliverable 重跑 strict validate 和 re-audit，验证新规则真抓到老问题",
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "acceptanceCriteria": [
-        "命令 openclaw agent --agent main --message '对 ~/deliverables/wuliangye-stable 跑 data-quality-audit' 触发本 session 新 skill",
-        "agent 产出 ~/deliverables/wuliangye-stable/audit-report.md 存在",
-        "audit-report.md 含 PASS / FLAG / FAIL 三分类 section，至少覆盖 10 个硬数字条目",
-        "至少 1 条 cross-check 实际调第二源 (Tushare vs 东方财富 / FMP) 对齐",
-        "至少应用 1 条 common-sense-rules.yaml 规则（如毛利率合理范围）",
-        "审计完成后 agent 在 message 里给 final verdict (e.g. Overall PASS / OVERALL FLAG: 2 items / OVERALL FAIL: 1 item)"
+        "validate-delivery --strict on haitian-stable 期望: 如果 analysis.md 真的含 `~` estimate-as-T1 模式则 exit 1 报告具体行（真实验证；如果 haitian analysis.md 精度一致没 ~，report clean 也可接受）",
+        "data-quality-audit 对 haitian-stable 重跑 (触发 skill + 手动提示检查 restatement_aware)，新 audit-report.md 应显式 mention restatement_aware rule 对 EPS 2022 的 FLAG 诊断",
+        "style_scan --warn-only on haitian analysis.md 运行 exit 0 并给出一行性 summary",
+        "macmini 端到端场景里三个新工具（--strict / restatement rule / style_scan）都被 agent 或人工触发至少 1 次"
       ],
-      "verification_method": "ssh macmini 读 audit-report.md + agent final message"
+      "verification_method": "ssh macmini 跑 + 抓 audit-report.md 内容 grep"
     }
   ],
-  "created_at": "2026-04-18T23:40:00+08:00"
+  "created_at": "2026-04-19T11:20:00+08:00"
 }

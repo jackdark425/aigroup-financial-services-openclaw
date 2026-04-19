@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-"""style_scan.py — 文字表述一致性扫描（WARN-level, 默认非阻塞）。
+"""style_scan.py — 文字表述一致性扫描 (WARN-level)。
 
-扫描 banker deliverable 的 analysis.md / data-provenance.md 对如下风格失误：
+扫描一份 banker markdown 对如下风格失误:
 
-1. 同一数值指标在不同段落精度不一致（如 `1.34` vs `1.340` vs `1.3` 指代同一字段）
-2. 货币单位混用（同段同时 `亿元` 和 `万元` 且不给显式换算括号）
-3. 期间术语混用（同段同时 `Q3` 和 `三季度` 指代同一期间）
-4. 同比增速术语混用（同段同时 `YoY` 和 `同比`）
-5. 日期格式不一（同份文档同时 `2024-10-27` / `2024/10/27` / `2024年10月27日`）
+1. 同一数值指标在不同段落精度不一致 (如 `1.34` vs `1.340` vs `1.3` 指代同一字段)
+2. 货币单位混用 (同段同时 `亿元` 和 `万元` 且不给显式换算括号)
+3. 期间术语混用 (同段同时 `Q3` 和 `三季度` 指代同一期间)
+4. 同比增速术语混用 (同段同时 `YoY` 和 `同比`)
+5. 日期格式不一 (同份文档同时 `2024-10-27` / `2024/10/27` / `2024年10月27日`)
 
-默认 `--warn-only` 模式（exit 0 + 输出报告）便于 CI 集成 / validate-delivery 非阻塞调用。
-去掉 `--warn-only` 则命中任一 WARN 后 exit 1。
+加 `--warn-only` 则命中任意 WARN 也 exit 0 (便于 CI / validate-delivery 非阻塞调用)。
 """
 from __future__ import annotations
 
@@ -19,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-# hard number pattern: 支持 1.34元/股, 1,088亿元, 22.9%, ¥100 etc.
+# hard number pattern: 1.34元/股, 1,088亿元, 22.9% etc.
 HARD_NUMBER = re.compile(
     r"(?<![0-9A-Za-z\u4e00-\u9fa5])"
     r"([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?)"
@@ -122,7 +121,6 @@ def main() -> int:
     ap.add_argument(
         "--warn-only",
         action="store_true",
-        default=False,
         help="always exit 0, only print WARN report (recommended for CI).",
     )
     args = ap.parse_args()

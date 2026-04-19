@@ -32,9 +32,10 @@ cn-client-investigation skill, and it can also be wired into CI if the
 deliverable is checked into a repo.
 """
 from __future__ import annotations
+import collections
+import pathlib
 import re
 import sys
-import pathlib
 from typing import Iterable
 
 
@@ -288,7 +289,6 @@ def precision_scan(analysis_text: str) -> list[str]:
     values (e.g. "56.27 亿元" vs "83.27 亿元" for different years) round
     to different integers and never collide.
     """
-    import collections
     # key = (int_part, unit)
     groups: dict[tuple[int, str], set[str]] = collections.defaultdict(set)
     for line in analysis_text.splitlines():

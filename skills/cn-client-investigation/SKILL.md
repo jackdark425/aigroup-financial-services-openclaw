@@ -172,13 +172,104 @@ Follow the banker-classical analysis frame (`customer-analysis-pack` skill), enh
 - CN-specific 政策驱动 section: "十四五" / 新基建 / 专精特新 / 国产化替代进度
 - CN-specific 监管风险 section: 证监会处罚历史 / 关联交易披露 / ESG 新规
 
-### Phase 4 — Deliverable generation (text-safe PPTX)
+### Phase 3.5 — Raw-data snapshot (MANDATORY from v0.9.0)
 
-**MANDATORY ROUTE: pptxgenjs via `slides/slide-NN.js` + `node slides/compile.js`.**
+**Why**: 2026-04-20 多公司 real-test 发现 MiniMax 在 provenance 的 Source 列里写"Wind (2026-04-17)"、"同花顺 F10"这种**并未安装的工具名称**作为来源 —— 纯捏造。要堵这个洞，agent 在写 analysis.md 之前必须把**真实的 MCP 工具调用结果**存成 JSON 快照，作为审计尾迹。
 
-> ⛔ NEVER use python-pptx (`from pptx import Presentation`) to *generate* slides. python-pptx produces bare white-background slides with no theming. It is ONLY permitted for text extraction (inside `validate-delivery.py`). Any use of python-pptx slide-layout or addShape/addText calls to build the deck is a hard violation of this skill.
+**三个 CN MCP（插件 `.mcp.json` 已声明依赖）**：
 
-For CN companies this skill's pptxgenjs path overrides the `ppt-deliverable` skill's "MiniMax first" routing — the pptxgenjs compile-gate is the only way to enforce Rule 7 (typo scan at compile time).
+| MCP | 覆盖 | 关键工具 |
+|-----|------|---------|
+| `aigroup-market-mcp` | 上市公司行情 + 财务 (Tushare) | `basic_info` / `company_performance` / `stock_data` / `index_data` / `finance_news` |
+| `PrimeMatrixData` | 上市 + 非上市企业工商 + 司法 + 风险 (启信宝) | `basic_info` / `judicial_info` / `risk_info` / `shareholder_info` / `finance_info` |
+| `Tianyancha` | 上市 + 非上市企业基础 + 风险全景 (天眼查) | `companyBaseInfo` / `risk` |
+
+**要求**：在 `<deliverable-dir>/raw-data/` 目录下保存每次 MCP 调用的原始 JSON，文件名格式 `{identifier}-{mcp-short}-{tool}.json`。
+
+**上市公司（有 ts_code，如 002594.SZ / 300750.SZ / 0700.HK）必须包含**：
+
+1. `{ts_code}-aigroup-market-mcp-basic_info.json`
+2. `{ts_code}-aigroup-market-mcp-company_performance.json`
+3. `{ts_code}-aigroup-market-mcp-stock_data.json`
+4. ≥1 企业风险 overlay：`{uscc}-primematrix-basic_info.json`（primary）或 `{uscc}-tianyancha-companyBaseInfo.json`（备用，见下）
+
+**非上市公司（只有 统一社会信用代码 / uscc）必须包含**：
+
+1. ≥1 企业风险 overlay：`{uscc}-primematrix-basic_info.json`（primary）或 `{uscc}-tianyancha-companyBaseInfo.json`（备用）
+（aigroup-market-mcp 不适用，可省略）
+
+**强制前置步骤 — 公司名称核验（v0.9.2+）**：非上市公司调 `PrimeMatrixData__basic_info` 之前，**必须先调 `PrimeMatrixData__company_name` 模糊查出精确注册名**。常见的公众名 ≠ 法定名陷阱：
+
+- "字节跳动" 实际内地主体已于 2023 年改名为 **抖音有限公司**
+- "京东数科" 后改名 **京东科技控股股份有限公司**
+- "滴滴" 的大陆注册主体是 **北京小桔科技有限公司**
+
+用公众名硬调 `basic_info`，PrimeMatrix 返回 `{}` 空对象，下游数据全部空白。`raw_data_check.py` 现在会检测"PM basic_info 无统一社会信用代码"并 FAIL。正确姿态：
+
+```
+step 1: PrimeMatrixData__company_name(blur_name="字节跳动")  →  列出匹配实体
+step 2: 人工 / agent 选定法定名  →  "抖音有限公司"
+step 3: PrimeMatrixData__basic_info(company_name="抖音有限公司")  →  完整工商信息
+```
+
+**risk_info 空返回警觉**：PM `risk_info` 若只返回 `{"公司名称": "..."}` 而无 `司法/经营异常/关联风险` 等字段，不等于"企业干净"——可能是 PM API 对该实体无数据返回。banker 交付前需手工再核一次司法公告/行政处罚/失信被执行人库，不能靠 gate 反向证明。
+
+**Tianyancha 当前状态（2026-04+）**：智谱 MCP broker 的 Tianyancha 账户暂停（余额耗尽）。gate 接受已有 snapshot 但不强制 — PrimeMatrixData 目前是唯一实际可达的企业风险 overlay。需要启用 Tianyancha 时充值 + 按 lead-discovery QUICKSTART 注册即可。
+
+**data-provenance.md 要求**：每个 `raw-data/*.json` 文件的文件名 stem 必须在 `data-provenance.md` 的 Source 列至少出现一次 —— 这建立了"MD 里的数字 ↔ 溯源表 ↔ 原始 MCP 调用"的闭环。
+
+**Worked example (BYD 002594.SZ)**：
+
+```
+deliverables/byd-20260420/
+├── raw-data/
+│   ├── 002594.SZ-aigroup-market-mcp-basic_info.json      ← basic_info 返回：公司简介 + 行业 + 上市日期
+│   ├── 002594.SZ-aigroup-market-mcp-company_performance.json  ← 营收 / 净利润 / 毛利率 / ROE 时间序列
+│   ├── 002594.SZ-aigroup-market-mcp-stock_data.json       ← 近 1 年日线 OHLC + 复权
+│   └── 91440300192317458F-tianyancha-companyBaseInfo.json  ← 工商基本信息 + 统一社会信用代码
+├── data-provenance.md   （每一行 Source 列写 `aigroup-market-mcp__company_performance` 或对应 raw-data 文件名 stem）
+├── analysis.md
+├── slides/ ...
+└── 比亚迪_deep_analysis.pptx
+```
+
+**验证**：`raw_data_check.py`（在 `validate-delivery.py` aggregator 的第 3c 道 gate 自动跑）会确认：
+- `raw-data/` 目录存在且至少有 3 个 JSON 文件
+- 上市 vs 非上市的工具覆盖满足上述要求
+- 每个 raw JSON 文件 stem 都在 provenance 里被引用
+
+**Back-compat**：0.8.x 版本的旧交付物没有 `raw-data/` → 默认模式下 gate 3c 给出 WARN 但不 FAIL；`--strict-mcp` 模式下直接 FAIL。新交付物必须上 raw-data/。
+
+### Phase 4 — Deliverable generation (banker-memo preferred, v0.9.6+)
+
+**PREFERRED ROUTE (0.9.6+): Prompt-driven `banker-memo` skill + `build_outline_deck.py`.**
+
+The `banker-memo` skill dispatches the MiniMax agent through an investment-banker-analyst framework (8-section research memo + content-driven 10-15 slide outline, no fixed page count). Usage:
+
+```bash
+# 1. After raw-data/ is populated (Phase 3.5), dispatch banker-memo skill
+python3 scripts/banker-memo/scripts/build_banker_prompt.py \
+    <ts_code> <name_cn> <industry> <raw_dir> <out_dir> > /tmp/prompt.md
+openclaw agent --agent main --thinking high --json --timeout 600 \
+    --message "$(cat /tmp/prompt.md)"
+# Agent writes analysis.md + slides-outline.md + data-provenance.md
+
+# 2. Compile outline-driven PPT
+python3 scripts/cn-client-investigation/scripts/build_outline_deck.py \
+    <dir> <ts_code> <name_cn> <name_en>
+
+# 3. Close provenance gaps + validate
+python3 scripts/cn-client-investigation/scripts/sync_provenance.py <dir>
+python3 scripts/cn-client-investigation/scripts/validate-delivery.py --strict-mcp <dir>
+```
+
+Why preferred: 0.9.5 Python-templated `build_deck.py` produced an 8-slide data dashboard — no industry context, no peer benchmarking, no SOTP / 4C's. 0.9.6 prompt-driven path: agent writes banker narrative (14-20 KB analysis) with peer comparison ([EST] tagged), Data Flag self-reporting (e.g. income vs company_performance 0.59pp discrepancy), SOTP valuation scenarios, 4C's credit framework with specific 授信额度 / 期限 / 利率 / 增信 recommendations.
+
+**LEGACY ROUTE (still supported for quick fact-sheets): `build_deck.py`** emits a fixed 8-slide stat-card dashboard. Use only when depth isn't required.
+
+**Both routes share:** pptxgenjs slide compile + cn_typo_scan post-write gate. NEVER use python-pptx for generation (white background / no theming; only permitted for text extraction inside `validate-delivery.py`).
+
+For CN targets, these routes override `ppt-deliverable`'s "MiniMax first" routing — only pptxgenjs compile integrates the compile-time typo gate.
 
 Steps:
 1. Write `slides/slide-01.js … slide-NN.js` — each exports `createSlide(pres, theme)`.
@@ -189,21 +280,23 @@ Steps:
 
 ### Phase 5 — QA (用 `validate-delivery.py` 单入口)
 
-**推荐一条命令跑完四道 gate**：
+**推荐一条命令跑完六道 gate**：
 
 ```bash
 python3 ~/.openclaw/extensions/aigroup-financial-services-openclaw/skills/cn-client-investigation/scripts/validate-delivery.py \
-    --strict --style \
+    --strict --strict-mcp --style \
     /path/to/deliverable_dir
-# exit 0 → 4/4 PASS (verify_intelligence + cn_typo_scan + slide_data_audit + provenance_verify) + optional style_scan WARN-only
+# exit 0 → 全部 PASS；--strict-mcp 下还要求 source 列有 MCP-tool / 官方披露 anchor 且 raw-data/ 齐全
 # exit 1 → 至少一道 gate 失败，stderr 指出是哪道 + 具体行号 / 原因
 ```
 
-这个 aggregator 自动按文件名 find：
+Aggregator 自动按文件名 find 并调度：
 - `*intelligence*.md` → `verify_intelligence.py`（跨插件引用 lead-discovery 的 cn-lead-safety）
 - `*.pptx` → 自动 extract text + `cn_typo_scan.py`
-- `*.pptx` + `data-provenance.md` → `slide_data_audit.py`（**NEW v0.6.0**：PPT 上每个硬数字必须有 provenance 行支撑；捕获 Phase 4 手改 slide-NN.js 后 provenance 未同步更新的漂移）
+- `*.pptx` + `data-provenance.md` → `slide_data_audit.py`（v0.6.0 起：PPT 上每个硬数字必须有 provenance 行支撑；捕获 Phase 4 手改 slide-NN.js 后 provenance 未同步更新的漂移）
 - `analysis.md` + `data-provenance.md` → `provenance_verify.py`（`--strict` 开启 estimate-as-T1 smuggling 检测 + 精度漂移 WARN）
+- `data-provenance.md` → `source_authenticity_check.py` (**NEW v0.9.0**：扫 Source 列，拦 Wind / 同花顺 等未安装工具的伪造标注；`--strict-mcp` 下非 MCP / 非官方披露全部 FAIL)
+- `<dir>/raw-data/` → `raw_data_check.py` (**NEW v0.9.0**：校验 Phase 3.5 的 MCP 调用快照 + 上市 vs 非上市覆盖 + provenance 引用闭环；`--strict-mcp` 下缺 raw-data/ 直接 FAIL)
 - 可选 `--style` → `style_scan.py --warn-only` 对 analysis.md 扫货币/期间/日期/YoY 术语一致性（非阻塞）
 
 Debug 单 gate 时仍可分别跑（见各自脚本）。额外手动 QA：

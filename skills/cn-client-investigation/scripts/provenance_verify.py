@@ -54,13 +54,28 @@ NUM_CORE = r"\d+(?:,\d{3})*(?:\.\d+)?"
 HARD_NUMBER = re.compile(rf"({NUM_CORE})\s*({UNITS})")
 
 
+# Lines containing these tags are explicitly non-MCP-sourced estimates
+# (peer comparisons, rough sector consensus, "not yet verified") — the
+# banker-memo skill mandates the `[EST, per sector consensus]` tag on
+# every such value. Skipping them from provenance-coverage checks is
+# semantically correct: they were never intended to be MCP-sourced.
+EST_TAGS = ("[EST", "[未核实]", "[估算]", "per sector consensus", "estimate]")
+
+
+def _is_estimate_line(line: str) -> bool:
+    return any(tag in line for tag in EST_TAGS)
+
+
 def extract_hard_numbers(text: str) -> list[tuple[int, str, str, str]]:
     """
     Return [(line_no, number, unit, line_snippet), ...] for every hard
-    number found in `text`.
+    number found in `text`. Skips lines tagged as `[EST]` / estimate —
+    those are not required to have provenance entries.
     """
     hits: list[tuple[int, str, str, str]] = []
     for lineno, line in enumerate(text.splitlines(), 1):
+        if _is_estimate_line(line):
+            continue
         for m in HARD_NUMBER.finditer(line):
             hits.append((lineno, m.group(1), m.group(2), line.strip()[:120]))
     return hits

@@ -53,6 +53,9 @@ CN_TYPO_SCAN = SCRIPT_DIR / "cn_typo_scan.py"
 PROVENANCE_VERIFY = SCRIPT_DIR / "provenance_verify.py"
 STYLE_SCAN = SCRIPT_DIR / "style_scan.py"
 SLIDE_DATA_AUDIT = SCRIPT_DIR / "slide_data_audit.py"
+SOURCE_AUTH_CHECK = SCRIPT_DIR / "source_authenticity_check.py"
+RAW_DATA_CHECK = SCRIPT_DIR / "raw_data_check.py"
+DOCX_DATA_AUDIT = SCRIPT_DIR / "docx_data_audit.py"
 
 # verify_intelligence.py is in the paired lead-discovery plugin. Try a few
 # known locations in order. If none resolves, that gate is reported as
@@ -140,6 +143,12 @@ def main() -> int:
         "--strict",
         action="store_true",
         help="Pass --strict to provenance_verify (catches estimate-as-T1 smuggling).",
+    )
+    ap.add_argument(
+        "--strict-mcp",
+        action="store_true",
+        help=("Pass --strict-mcp to source_authenticity_check (fails on media-only "
+              "citations in addition to forbidden labels like Wind/同花顺)."),
     )
     ap.add_argument(
         "--style",
@@ -278,6 +287,72 @@ def main() -> int:
             summary.append(
                 f"[3/4] provenance_verify    OK{' (--strict)' if args.strict else ''}"
             )
+
+    # -------- Gate 3b: source_authenticity_check on data-provenance.md --------
+    if not provenance.exists():
+        summary.append("[3b]  source_authenticity SKIPPED (no data-provenance.md)")
+    else:
+        auth_args = [str(provenance)]
+        if args.strict_mcp:
+            auth_args.insert(0, "--strict-mcp")
+        rc, so, se = run_gate(SOURCE_AUTH_CHECK, auth_args)
+        mode_label = " (--strict-mcp)" if args.strict_mcp else ""
+        if rc != 0:
+            overall_fail = 1
+            print(f"  [fail] source_authenticity_check{mode_label}:", file=sys.stderr)
+            if se.strip():
+                print("    " + se.strip().replace("\n", "\n    ")[:2000], file=sys.stderr)
+            summary.append(f"[3b]  source_authenticity FAIL{mode_label}")
+        else:
+            print(f"  [ok] source_authenticity_check{mode_label}: {so.strip()}")
+            if se.strip():
+                print("    " + se.strip().replace("\n", "\n    "))
+            summary.append(f"[3b]  source_authenticity OK{mode_label}")
+
+    # -------- Gate 2c: docx_data_audit on each *.docx ↔ data-provenance.md --------
+    docx_files = sorted(glob.glob(str(d / "*.docx")))
+    if not docx_files:
+        summary.append("[2c]  docx_data_audit     SKIPPED (no .docx in dir)")
+    elif not provenance_early.exists():
+        summary.append(
+            "[2c]  docx_data_audit     SKIPPED (no data-provenance.md to cross-check against)"
+        )
+    else:
+        all_ok = True
+        for p in docx_files:
+            pp = pathlib.Path(p)
+            rc, so, se = run_gate(DOCX_DATA_AUDIT, [str(pp), str(provenance_early)])
+            if rc != 0:
+                all_ok = False
+                print(f"  [fail] docx_data_audit on {pp.name}", file=sys.stderr)
+                if se.strip():
+                    print("    " + se.strip().replace("\n", "\n    ")[:2000], file=sys.stderr)
+            else:
+                print(f"  [ok] docx_data_audit on {pp.name}: {so.strip()}")
+        summary.append(
+            f"[2c]  docx_data_audit     {'OK' if all_ok else 'FAIL'} "
+            f"({len(docx_files)} docx file(s))"
+        )
+        if not all_ok:
+            overall_fail = 1
+
+    # -------- Gate 3c: raw_data_check on deliverable-dir/raw-data/ --------
+    rd_args = [str(d)]
+    if args.strict_mcp:
+        rd_args.insert(0, "--strict-mcp")
+    rc, so, se = run_gate(RAW_DATA_CHECK, rd_args)
+    rd_label = " (--strict-mcp)" if args.strict_mcp else ""
+    if rc != 0:
+        overall_fail = 1
+        print(f"  [fail] raw_data_check{rd_label}:", file=sys.stderr)
+        if se.strip():
+            print("    " + se.strip().replace("\n", "\n    ")[:2000], file=sys.stderr)
+        summary.append(f"[3c]  raw_data_check      FAIL{rd_label}")
+    else:
+        print(f"  [ok] raw_data_check{rd_label}: {so.strip()}")
+        if se.strip():
+            print("    " + se.strip().replace("\n", "\n    "))
+        summary.append(f"[3c]  raw_data_check      OK{rd_label}")
 
     # -------- Optional Phase [4]: style_scan (warn-only) --------
     if args.style and analysis.exists():

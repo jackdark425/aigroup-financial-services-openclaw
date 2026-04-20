@@ -1,3 +1,33 @@
 {
-  "mcpServers": {}
+  "_comment": "A股 / 上市公司数据来源：aigroup-market-mcp (Tushare 行情+财务). 非上市或工商风险场景需要 PrimeMatrixData + Tianyancha，这两个 MCP 由用户在 ~/.openclaw/openclaw.json 手动注册（见 QUICKSTART.md），不从本插件 bundle 加载。",
+  "mcpServers": {
+    "aigroup-market-mcp": {
+      "command": "npx",
+      "args": ["-y", "aigroup-market-mcp"],
+      "env": {
+        "TUSHARE_TOKEN": "${TUSHARE_TOKEN}"
+      },
+      "alwaysAllow": [
+        "basic_info",
+        "stock_data",
+        "stock_data_minutes",
+        "company_performance",
+        "company_performance_hk",
+        "company_performance_us",
+        "index_data",
+        "macro_econ",
+        "fund_data",
+        "fund_manager_by_name",
+        "convertible_bond",
+        "block_trade",
+        "margin_trade",
+        "money_flow",
+        "dragon_tiger_inst",
+        "csi_index_constituents",
+        "finance_news",
+        "hot_news",
+        "current_timestamp"
+      ]
+    }
+  }
 }

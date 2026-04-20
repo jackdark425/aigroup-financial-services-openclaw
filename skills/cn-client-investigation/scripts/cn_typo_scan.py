@@ -110,6 +110,24 @@ def scan(text: str) -> list[tuple[int, str, str]]:
                 #   减 (减 X%), 涨 (上涨 X%), 跌 (下跌 X%),
                 #   有 (有 X 家 / 具有 X), 下 (下滑 3% — 下 can be noun 'down')
                 "续受达至到增逾过仅期降减涨跌有下"
+                # CN address terms legitimately followed by digits (2026-04:
+                # PrimeMatrix returns 注册住所 like "北京市朝阳区酒仙桥路10号";
+                # 路/号/区/街/层/座/室/楼/栋/院/门/馆 all naturally meet a digit)
+                "路号区街层座室楼栋院门馆"
+                # State-of-the-business verbs: 保持 X%/增长（持 as in 保持 X%），
+                # 支持 X 亿 — 持 legitimately precedes a digit in banker prose.
+                "保持"
+                # Quantifiers and scope words that legitimately precede digits:
+                # 全部 12 个季度, 第 3 部, 一部 1000 亿
+                "部"
+                # More banker-prose leads found in 0.9.5→0.9.6 runs: common
+                # prepositions / nouns / business verbs that commonly sit
+                # before a digit in CN sell-side text. Each is low-risk for
+                # escape-drift (the known MiniMax escape corruption produces
+                # rare-character sequences, not normal prose chars).
+                "从本损是矿业项期内上下左右前后次旁"
+                "资本金额度值率比利息本期末初"
+                "元收入利润成长增长盈亏销售毛"
                 # foreign brand heads
                 "LVMH"
             )

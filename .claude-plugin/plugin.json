@@ -1,7 +1,7 @@
 {
   "name": "aigroup-financial-services-openclaw",
   "description": "Financial modeling, analysis, and deliverables suite for OpenClaw — DCF, LBO, comps, CIM, pitch deck, and banker deliverables. Pairs with aigroup-lead-discovery-openclaw.",
-  "version": "0.8.1",
+  "version": "0.9.6",
   "skills": "skills",
   "commands": "commands",
   "mcpServers": ".mcp.json"

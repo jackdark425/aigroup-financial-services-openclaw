@@ -67,6 +67,8 @@ Preferred routing order:
 
 **CN exception (overrides order above):** For any company matched by the CN pre-flight above, the pptxgenjs route (`slides/slide-NN.js` + `node slides/compile.js`) is MANDATORY — not optional, not a fallback. The MiniMax PPT stack does not integrate the compile-time typo gate required by `cn-client-investigation`. Do NOT use python-pptx for slide generation under any circumstances; it produces unthemed white-background slides. See `cn-client-investigation/SKILL.md` Phase 4 for the required steps.
 
+**CN deck-numbers flow (v0.9.0+):** Before writing `slides/slide-NN.js`, run `extract_deck_numbers.py <deliverable_dir>` to emit `deck-numbers.json`. Each slide module should import numbers from that lookup rather than re-typing values from analysis.md prose. `slide_data_audit.py` (Gate 2b) remains the post-compile enforcement — every number on a slide must map to a provenance row. Combined with `raw_data_check.py` (Gate 3c), this closes the loop `raw-data/*.json → data-provenance.md → deck-numbers.json → slides/*.js → pptx`.
+
 ## Workflow
 
 ### Step 1: Decide whether this is create vs refresh

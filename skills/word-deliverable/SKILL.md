@@ -17,6 +17,17 @@ Use this skill when the user wants a Word document as the final output surface f
 - Diligence note after `comps-analysis`, `dcf-model`, or `lbo-model`
 - Internal banking brief assembled from multiple plugin outputs
 
+## CN target pre-flight (MANDATORY when target is a Chinese-market entity)
+
+For any CN/大陆 target (A股 / 港股中概 / 非上市内资), follow the same raw-data → provenance → analysis.md chain that `cn-client-investigation` enforces for PPT:
+
+- The `.docx` memo MUST source every hard number from `<deliverable-dir>/analysis.md` or `<deliverable-dir>/data-provenance.md`. Do not re-derive numbers inside the docx generator.
+- After the docx is written, run `validate-delivery.py` — its Gate 2c (`docx_data_audit.py`) scans the memo text and cross-checks every hard number against the provenance table. Missing rows = FAIL; block delivery.
+- If a convenient machine-readable lookup helps the generator, run `extract_deck_numbers.py <deliverable_dir>` once to emit `deck-numbers.json`; memo generation code can import that instead of re-typing numbers from analysis.md.
+- Cite `raw-data/{ts_code}-*.json` MCP snapshots in the memo's footnote if the memo includes banker-grade numbers (parallels PPT's Phase 3.5 requirement).
+
+For non-CN targets, skip this pre-flight and use the generic routing below.
+
 ## Tooling preference
 
 Prefer the bundled MiniMax-derived Word skill shipped inside this plugin:

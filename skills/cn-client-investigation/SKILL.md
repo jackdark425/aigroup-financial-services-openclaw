@@ -174,11 +174,18 @@ Follow the banker-classical analysis frame (`customer-analysis-pack` skill), enh
 
 ### Phase 4 — Deliverable generation (text-safe PPTX)
 
-Route PPT generation through the unified `ppt-deliverable` → host MiniMax `slide-making-skill` path, BUT with these additional constraints driven by this skill:
+**MANDATORY ROUTE: pptxgenjs via `slides/slide-NN.js` + `node slides/compile.js`.**
 
-1. `slides/slide-01.js` cover uses Rule 3 (English hero 44pt + Chinese subtitle 26pt)
-2. Every `addText` call with Chinese content goes through the lexicon (require `./references/cn-lexicon.js` and reference `LEXICON.company_name` / `LEXICON.sections.finance` etc.) — agent must NOT inline-type long Chinese strings
-3. `compile.js` includes a post-write hook that calls `cn_typo_scan.py` on the generated PPTX. If any red-flag hits, abort compile and re-emit the offending slide.
+> ⛔ NEVER use python-pptx (`from pptx import Presentation`) to *generate* slides. python-pptx produces bare white-background slides with no theming. It is ONLY permitted for text extraction (inside `validate-delivery.py`). Any use of python-pptx slide-layout or addShape/addText calls to build the deck is a hard violation of this skill.
+
+For CN companies this skill's pptxgenjs path overrides the `ppt-deliverable` skill's "MiniMax first" routing — the pptxgenjs compile-gate is the only way to enforce Rule 7 (typo scan at compile time).
+
+Steps:
+1. Write `slides/slide-01.js … slide-NN.js` — each exports `createSlide(pres, theme)`.
+2. Copy `references/compile_with_typo_gate.template.js.txt` → `slides/compile.js` (strip `.txt`), set `SLIDE_COUNT` / `OUTPUT_PATH` / `THEME`.
+3. `cd slides && node compile.js` — the template's post-write gate runs `cn_typo_scan.py`; if it fails, fix the offending slide-NN.js and recompile.
+4. `slides/slide-01.js` cover uses Rule 3 (English hero 44pt + Chinese subtitle ≤28pt).
+5. Every `addText` with Chinese content uses the lexicon (`require('./references/cn-lexicon.js')`); do NOT inline-type long Chinese strings.
 
 ### Phase 5 — QA (用 `validate-delivery.py` 单入口)
 

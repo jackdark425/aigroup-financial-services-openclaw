@@ -65,6 +65,8 @@ Preferred routing order:
 1. host MiniMax PPT skills — `pptx-generator`, `slide-making-skill`, `ppt-orchestra-skill`, `ppt-editing-skill`
 2. environment `pptx` fallback when the MiniMax stack is not exposed
 
+**CN exception (overrides order above):** For any company matched by the CN pre-flight above, the pptxgenjs route (`slides/slide-NN.js` + `node slides/compile.js`) is MANDATORY — not optional, not a fallback. The MiniMax PPT stack does not integrate the compile-time typo gate required by `cn-client-investigation`. Do NOT use python-pptx for slide generation under any circumstances; it produces unthemed white-background slides. See `cn-client-investigation/SKILL.md` Phase 4 for the required steps.
+
 ## Workflow
 
 ### Step 1: Decide whether this is create vs refresh

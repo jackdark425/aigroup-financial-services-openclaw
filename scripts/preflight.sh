@@ -21,17 +21,6 @@ need_cmd() {
   fi
 }
 
-need_python_mod() {
-  # need_python_mod <module> <install_hint>
-  local mod="$1" hint="$2"
-  if ! python3 -c "import $mod" >/dev/null 2>&1; then
-    MISSING+=("python3 module '$mod' — $hint")
-    FAIL=1
-  else
-    echo "  ok  python3 module '$mod'"
-  fi
-}
-
 echo "aigroup-financial-services-openclaw preflight on $(uname -s)/$(uname -m)"
 echo
 

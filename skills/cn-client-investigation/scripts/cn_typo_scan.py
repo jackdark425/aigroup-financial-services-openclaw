@@ -128,6 +128,12 @@ def scan(text: str) -> list[tuple[int, str, str]]:
                 "从本损是矿业项期内上下左右前后次旁"
                 "资本金额度值率比利息本期末初"
                 "元收入利润成长增长盈亏销售毛"
+                # More banker-prose verbs/nouns that precede digits (v0.9.7):
+                # 恶化 3pp, 低点 0.8x, 改善/修复/回调, 占/含/排/列, 来到 X, 降到 X
+                "化点改修回占含排列来到达均段条处"
+                # v0.9.7 second batch from Moutai test:
+                # 口径 4, 差异 2, 可承做 2, 期限 1-3, 径/异/做/限
+                "径异做限派息做"
                 # foreign brand heads
                 "LVMH"
             )
